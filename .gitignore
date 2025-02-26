@@ -114,3 +114,4 @@ ENV/
 **/prova
 **/*prj*/*
 **/conifer_*/
+*.pyc
