@@ -1,0 +1,3 @@
+[submodule "BitHub"]
+	path = BitHub
+	url = git@github.com:pviscone/BitHub.git
