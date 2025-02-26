@@ -16,7 +16,9 @@ dependencies = [
     "xgboost",
     "scikit-learn",
     "hist",
-    "plothist"
+    "plothist",
+    "ruff",
+    "ipykernel"
 ]
 
 [tool.ruff]
