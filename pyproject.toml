@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "ML studies for the CMS Phase-2 L1TEG group."
 dependencies = [
     "numpy",
+    "apytypes",
     "matplotlib",
     "uproot",
     "mplhep",
