@@ -19,6 +19,7 @@ dependencies = [
     "plothist",
     "ruff",
     "ipykernel",
+    "bithub@git+https://github.com/pviscone/BitHub.git"
 ]
 
 [tool.ruff]
