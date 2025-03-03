@@ -13,6 +13,7 @@ dependencies = [
     "mplhep",
     "awkward",
     "pandas",
+    "tqdm",
     "xgboost",
     "scikit-learn",
     "hist",

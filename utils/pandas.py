@@ -1,4 +1,4 @@
-def to_npdicts(df):
+def to_npdict(df):
     """
     Convert a pandas DataFrame to a dict of numpy arrays.
     """
