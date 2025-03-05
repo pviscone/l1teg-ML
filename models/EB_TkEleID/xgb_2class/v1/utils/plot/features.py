@@ -9,6 +9,8 @@ import hist
 
 hep.set_style("CMS")
 
+php_index = os.path.join(os.path.dirname(__file__), "index.php")
+
 def _profile(df, ax=None, figsize = (8, 10), save=None):
 
     if ax is None:
@@ -83,14 +85,17 @@ def _profile(df, ax=None, figsize = (8, 10), save=None):
     if save:
         fig = plt.gcf()
         os.makedirs(os.path.dirname(save), exist_ok=True)
-        fig.savefig(save.format(name=f"{df.attrs['name']}.pdf"))
-        fig.savefig(save.format(name=f"{df.attrs['name']}.png"))
+        os.system(f"cp -n {php_index} {os.path.dirname(save)}")
+        fig.savefig(save.format(name=f"{df.attrs['name']}.pdf"), bbox_inches="tight")
+        fig.savefig(save.format(name=f"{df.attrs['name']}.png"), bbox_inches="tight")
 
     return ax
 
 
-def profile(*dfs, figsize=(8,10), save=None):
+def profile(*dfs, features=None, figsize=(8,10), save=None):
     for df in dfs:
+        if features is not None:
+            df = df[features]
         _profile(df, figsize = figsize, save = save)
 
 
@@ -178,5 +183,6 @@ def plot_input_features(sig_df, bkg_df, features = None, weight = None,  save=No
     plt.gca().add_artist(leg1)
     if save:
         os.makedirs(os.path.dirname(save), exist_ok=True)
+        os.system(f"cp -n {php_index} {os.path.dirname(save)}")
         plt.savefig(f"{save}.pdf")
         plt.savefig(f"{save}.png")

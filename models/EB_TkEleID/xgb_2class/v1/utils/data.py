@@ -3,8 +3,23 @@ import uproot
 import numpy as np
 import awkward as ak
 import pandas as pd
+import xgboost as xgb
 from tqdm import tqdm
+from sklearn.utils.class_weight import compute_sample_weight
 
+#!--------------------------------------------------------------------------!#
+
+def compute_class_weights(*dfs):
+    lens = [len(df) for df in dfs]
+    max_len = max(lens)
+    weights = [max_len/len_ for len_ in lens]
+    return (*weights,)
+
+def select_columns(*dfs, columns):
+    res = [df[columns] for df in dfs]
+    return (*res,)
+
+#!--------------------------------------------------------------------------!#
 
 def generate_paths(P0, tags, names):
     if not isinstance(names, list|tuple):
@@ -44,12 +59,47 @@ def normalize_weight(*dfs, key=None, kind="entries"):
         res.append(df)
     return (*res,)
 
-def compute_class_weights(*dfs):
-    lens = [len(df) for df in dfs]
-    max_len = max(lens)
-    weights = [max_len/len_ for len_ in lens]
-    return (*weights,)
+def df_to_DMatrix(*dfs, features = None, label=None, weight=None, class_weights=None):
+    res = []
+    if features is None:
+        features = dfs[0].columns
 
-def select_columns(*dfs, columns):
-    res = [df[columns] for df in dfs]
+    if label in features:
+        features.remove(label)
+
+    if weight is not None and weight in features:
+        features.remove(weight)
+
+    for df in dfs:
+        if isinstance(df, list|tuple):
+            df = pd.concat(df)
+
+        if class_weights is None:
+            class_w = np.ones(len(df))
+        elif class_weights=="balanced":
+            class_w = compute_sample_weight(
+                class_weight='balanced',
+                y=df[label]
+            )
+        else:
+            raise ValueError(f"Invalid class_weight: {class_weights}")
+
+        res.append(xgb.DMatrix(df[features], label=df[label], weight=df[weight]*class_w))
+    return (*res,)
+
+def concatenate(*dfs):
+    res = []
+    if len(dfs)==1 and isinstance(dfs[0], dict):
+        dfs=dfs[0]
+
+    for df in dfs:
+        if isinstance(dfs, dict):
+            df_name=df
+            df = dfs[df]
+
+        if isinstance(df, list|tuple):
+            df = pd.concat(df)
+        if isinstance(dfs, dict):
+            df.attrs['name'] = df_name
+        res.append(df)
     return (*res,)

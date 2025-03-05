@@ -115,7 +115,5 @@ ENV/
 **/*prj*/*
 **/conifer_*/
 *.pyc
-*.png
 *.jpg
 *.jpeg
-*.pdf
