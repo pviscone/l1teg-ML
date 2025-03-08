@@ -103,12 +103,10 @@ ENV/
 *~
 *.root
 
-*.pdf
 *.out
 
 .envs
 .vscode
-*test*
 *.npy
 *.parquet
 **/prova
