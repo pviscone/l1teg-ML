@@ -40,13 +40,7 @@ df_train, df_test = concatenate(
     {"train": [sig_train, bkg_train], "test": [sig_test, bkg_test]}
 )
 
-scaler = BitScaler()
-scaler.fit(
-    df_train,
-    columns=features,
-    target=(-1 + 2**-4, 1 - 2**-4),
-    saturate={"TkEle_PtRatio": (0, 64), "TkEle_Tk_chi2RPhi": (0, 64)},
-)
+
 # scaler = None
 
 # %%
@@ -54,12 +48,28 @@ scaler.fit(
 # what = train, optimize
 what = "optimize"
 
-quantizations = [4, 6, 8, 10, 12, "float"]
+quantizations = [6, 8, 9, 10, 12, "float"]
 quant_aucs = {}
 quant_models = {}
 quant_params = {}
+scaler_quant = {}
 pt_bins = (0, 5, 10, 20, 30, 50, 100)
 for quant in quantizations:
+    scaler = BitScaler()
+    scaler.fit(
+        df_train,
+        columns=features,
+        target=(-1 , 1 ),
+        saturate={"TkEle_PtRatio": (0, 16),
+                  "TkEle_Tk_chi2RPhi": (0, 64),
+                  "TkEle_Tk_ptFrac": (0, 1),
+                  "TkEle_CryClu_relIso": (0, 16),
+                  "TkEle_CryClu_pt": (0, 64),
+                  "TkEle_CryClu_showerShape": (0, 1),
+                  },
+        precision = quant-1 if quant != "float" else None
+    )
+
     q = "float" if quant == "float" else (quant, 1, "AP_RND_CONV", "AP_SAT")
     print(f"Quantization: {q}")
     dtrain, dtest, dtest_cut = df_to_DMatrix(
@@ -223,6 +233,7 @@ for quant in quantizations:
     quant_aucs[f"{quant}"] = aucs
     quant_models[quant] = model
     quant_params[quant] = params
+    scaler_quant[quant] = scaler
 
 # %%
 plot_quant_aucs(quant_aucs, pt_bins, save="results/plots/quant_aucs")
@@ -239,9 +250,10 @@ def save(quant, path):
     import os
     model = quant_models[quant]
     param = quant_params[quant]
+    scaler = scaler_quant[quant]
     os.makedirs(path, exist_ok=True)
     model.save_model(f"{path}/model.json")
-    scaler.save(f"{path}/scaler.parquet")
+    scaler.save(f"{path}/scaler.json")
     param["quantizations"] = quant
     param["num_round"] = _num_round
     with open(f"{path}/parameters.pkl", "wb") as f:
