@@ -15,12 +15,16 @@ def compute_class_weights(*dfs):
     lens = [len(df) for df in dfs]
     max_len = max(lens)
     weights = [max_len / len_ for len_ in lens]
-    return (*weights,)
+    if len(weights)>1:
+        return (*weights,)
+    return weights[0]
 
 
 def select_columns(*dfs, columns):
     res = [df[columns] for df in dfs]
-    return (*res,)
+    if len(res)>1:
+        return (*res,)
+    return res[0]
 
 
 #!--------------------------------------------------------------------------!#
@@ -50,7 +54,9 @@ def load_df(*files, branches=None):
         df = pd.DataFrame(events)
         df.attrs["name"] = f.split("/")[-1].split(".")[0]
         res.append(df)
-    return (*res,)
+    if len(res)>1:
+        return (*res,)
+    return res[0]
 
 
 def normalize_weight(*dfs, key=None, kind="entries"):
@@ -68,7 +74,9 @@ def normalize_weight(*dfs, key=None, kind="entries"):
         elif kind == "entries":
             df.loc[:, weight_key] = w * len(df)
         res.append(df)
-    return (*res,)
+    if len(res)>1:
+        return (*res,)
+    return res[0]
 
 
 def df_to_DMatrix(
@@ -96,7 +104,7 @@ def df_to_DMatrix(
             df = pd.concat(df)
 
         labels = df[y]
-        weights = df[weight]
+        weights = df[weight] if weight is not None else np.ones_like(labels)
         df = df[features]
 
         if bitscaler is not None:
@@ -123,7 +131,9 @@ def df_to_DMatrix(
             raise ValueError(f"Invalid class_weight: {class_weights}")
 
         res.append(xgb.DMatrix(df, label=labels, weight=weights * class_w))
-    return (*res,)
+    if len(res)>1:
+        return (*res,)
+    return res[0]
 
 
 def concatenate(*dfs):
@@ -141,4 +151,6 @@ def concatenate(*dfs):
         if isinstance(dfs, dict):
             df.attrs["name"] = df_name
         res.append(df)
-    return (*res,)
+    if len(res)>1:
+        return (*res,)
+    return res[0]
