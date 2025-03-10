@@ -21,7 +21,8 @@ dependencies = [
     "ruff",
     "ipykernel",
     "bayesian-optimization",
-    "bithub@git+https://github.com/pviscone/BitHub.git"
+    "bithub@git+https://github.com/pviscone/BitHub.git",
+    "conifer@git+https://github.com/pviscone/conifer.git@temp_master"
 ]
 
 [tool.ruff]
