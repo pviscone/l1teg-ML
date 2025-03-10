@@ -108,7 +108,6 @@ ENV/
 .envs
 .vscode
 *.npy
-*.parquet
 **/prova
 **/*prj*/*
 **/conifer_*/
