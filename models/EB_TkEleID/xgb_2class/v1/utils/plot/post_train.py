@@ -28,13 +28,13 @@ def plot_importance(model, save=None):
     xgb.plot_importance(model, importance_type="gain", show_values=False)
 
     if save:
-        plt.savefig(f"{save}_averagegain.pdf")
-        plt.savefig(f"{save}_averagegain.png")
+        plt.savefig(f"{save}_averagegain.pdf", bbox_inches="tight")
+        plt.savefig(f"{save}_averagegain.png", bbox_inches="tight")
     xgb.plot_importance(model, importance_type="weight", show_values=False)
 
     if save:
-        plt.savefig(f"{save}_weight.pdf")
-        plt.savefig(f"{save}_weight.png")
+        plt.savefig(f"{save}_weight.pdf", bbox_inches="tight")
+        plt.savefig(f"{save}_weight.png", bbox_inches="tight")
 
     rank = {}
     for key in model.get_score():
@@ -55,8 +55,8 @@ def plot_importance(model, save=None):
     if save:
         os.makedirs(os.path.dirname(save), exist_ok=True)
         os.system(f"cp -n {php_index} {os.path.dirname(save)}")
-        plt.savefig(f"{save}_gain.pdf")
-        plt.savefig(f"{save}_gain.png")
+        plt.savefig(f"{save}_gain.pdf", bbox_inches="tight")
+        plt.savefig(f"{save}_gain.png", bbox_inches="tight")
     return sorted_rank
 
 
