@@ -114,3 +114,4 @@ ENV/
 *.pyc
 *.jpg
 *.jpeg
+**/results
