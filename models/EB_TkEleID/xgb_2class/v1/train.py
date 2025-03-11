@@ -246,7 +246,7 @@ plot_quant_aucs(quant_aucs, pt_bins, save="results/plots/quant_aucs")
 # quantizations
 # parameters
 def save(quant, path):
-    import pickle
+    import json
     import os
     model = quant_models[quant]
     param = quant_params[quant]
@@ -256,8 +256,9 @@ def save(quant, path):
     scaler.save(f"{path}/scaler.json")
     param["quantizations"] = quant
     param["num_round"] = _num_round
-    with open(f"{path}/parameters.pkl", "wb") as f:
-        pickle.dump(param, f)
+    with open(f"{path}/parameters.json", "w") as f:
+        f.write(json.dumps(param, indent=4))
+
 
     with open(f"{path}/report.txt", "w") as f:
         f.write("--- Scaler ---\n")
