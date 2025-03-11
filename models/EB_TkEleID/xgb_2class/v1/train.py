@@ -48,7 +48,7 @@ df_train, df_test = concatenate(
 # what = train, optimize
 what = "optimize"
 
-quantizations = [6, 8, 9, 10, 12, "float"]
+quantizations = [4, 6, 8, 9, 10, "float"]
 quant_aucs = {}
 quant_models = {}
 quant_params = {}
