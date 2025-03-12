@@ -5,6 +5,7 @@ from utils.data import (
     normalize_weight,
     concatenate,
     df_to_DMatrix,
+    take_max_score
 )
 
 from utils.plot.post_train import (
@@ -23,6 +24,7 @@ import numpy as np
 import xgboost as xgb
 
 from params import features, auxiliary, samples, tag, P0
+import pandas as pd
 
 # %%
 #!------------------------------------- Load Dataframe -------------------------------------!#
@@ -164,16 +166,22 @@ for quant in quantizations:
     raw_func = lambda x: np.log(x / (1 - x)) / 8
     df_train["score"] = raw_func(model.predict(dtrain))
     df_test["score"] = raw_func(model.predict(dtest))
-    df_train_best = (
-        df_train.groupby(["TkEle_ev_idx", "TkEle_CryClu_idx", "TkEle_label"])
-        .max("TkEle_score")
-        .reset_index()
+
+    sig_test["score"] = df_test["score"][df_test["TkEle_label"] == 1]
+    sig_train["score"] = df_train["score"][df_train["TkEle_label"] == 1]
+    bkg_test["score"] = df_test["score"][df_test["TkEle_label"] == 0]
+    bkg_train["score"] = df_train["score"][df_train["TkEle_label"] == 0]
+
+
+    sig_train_best, sig_test_best = take_max_score(
+        ["TkEle_ev_idx", "TkEle_GenEle_idx"], sig_train, sig_test
     )
-    df_test_best = (
-        df_test.groupby(["TkEle_ev_idx", "TkEle_CryClu_idx", "TkEle_label"])
-        .max("TkEle_score")
-        .reset_index()
+    bkg_train_best, bkg_test_best = take_max_score(
+        ["TkEle_ev_idx", "TkEle_CryClu_idx"], bkg_train, bkg_test
     )
+
+    df_test_best = pd.concat([sig_test_best, bkg_test_best])
+    df_train_best = pd.concat([sig_train_best, bkg_train_best])
 
     #!------------------------------------ Plot Loss and scores -----------------------------------!#
     plot_importance(model, save=f"results/plots/q_{quant}/importance")

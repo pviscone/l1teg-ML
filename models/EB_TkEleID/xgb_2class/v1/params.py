@@ -15,7 +15,7 @@ features = [
     "absdphi",
 ]
 
-auxiliary = ["GenEle_pt", "label", "weight", "sumTkPt", "CryClu_idx", "CryClu_eta"]
+auxiliary = ["GenEle_pt", "GenEle_idx", "label", "weight", "sumTkPt", "CryClu_idx", "CryClu_eta"]
 
 samples = [
     "DoubleElectron_PU200_train",

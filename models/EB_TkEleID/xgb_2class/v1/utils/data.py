@@ -10,6 +10,13 @@ from bithub.quantizers import mp_xilinx
 
 #!--------------------------------------------------------------------------!#
 
+def take_max_score(feats, *dfs, score="score"):
+    res = []
+    for df in dfs:
+        res.append(df.loc[df.groupby(feats)[score].idxmax()].reset_index())
+    if len(res) == 1:
+        return res[0]
+    return (*res,)
 
 def compute_class_weights(*dfs):
     lens = [len(df) for df in dfs]
