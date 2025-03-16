@@ -1,5 +1,5 @@
 tag = "140Xv0B9"
-P0 = f"/eos/user/p/pviscone/www/L1T/l1teg/EB_pretrain/v0/zsnap/era{tag}/reweight"
+P0 = f"/eos/user/p/pviscone/www/L1T/l1teg/EB_TkEle/v0/zsnap/era{tag}/reweight_1_full"
 
 features = [
     "CryClu_pt",

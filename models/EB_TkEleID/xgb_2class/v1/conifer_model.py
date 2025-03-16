@@ -130,8 +130,8 @@ for q in [4,6,8,9,10]:
     plt.legend()
     hep.cms.text("Phase-2 Simulation Preliminary", fontsize=18, ax = ax)
     hep.cms.lumitext("PU 200 (14 TeV)", fontsize=18, ax = ax)
-    fig.savefig(f"results/plots/q_{q}/hls_vs_xgb.png")
-    fig.savefig(f"results/plots/q_{q}/hls_vs_xgb.pdf")
+    fig.savefig(f"results/q_{q}/plots/hls_vs_xgb.png")
+    fig.savefig(f"results/q_{q}/plots/hls_vs_xgb.pdf")
 
 
 # %%
