@@ -107,12 +107,12 @@ def plot_input_features(sig_df, bkg_df, features = None, weight = None,  save=No
         "TkEle_CryClu_relIso": (r"Cluster Iso./$p^{\text{Cluster}}_T$", np.linspace(0,1.5,20)),
         "TkEle_CryClu_standaloneWP": (r"Cluster StandaloneWP", np.linspace(0,2,3)),
         "TkEle_CryClu_looseL1TkMatchWP": (r"Cluster LooseL1TkMatchWP", np.linspace(0,2,3)),
-        "TkEle_Tk_chi2RPhi": (r"Tk $\chi^2_{\text{R-}\phi}$", np.linspace(0,10,20)),
-        "TkEle_Tk_ptFrac": (r"$p_T^{\text{Tk}}/\sum p_T^{\text{Matched Tk}}$", np.linspace(0,1,20)),
-        "TkEle_absdeta": (r"$|\Delta \eta|$ (Tk-Cluster)", np.linspace(0,0.03,20)),
-        "TkEle_absdphi": (r"$|\Delta \phi|$ (Tk-Cluster)", np.linspace(0,0.3,20)),
-        "TkEle_nTkMatch": (r"$N_{\text{Matched Tracks}}$", np.linspace(0,12,13)),
-        "TkEle_PtRatio": (r"$p_T^{\text{Tk}}/p_T^{\text{Cluster}}$", np.linspace(0,7,20)),
+        "TkEle_Tk_chi2RPhi": (r"Tk $\chi^2_{\text{R-}\phi}$", np.linspace(0,16,17)),
+        "TkEle_Tk_ptFrac": (r"$p_T^{\text{Tk}}/\sum p_T^{\text{Matched Tk}}$", np.linspace(0,64,30)),
+        "TkEle_absdeta": (r"$|\Delta \eta|$ (Tk-Cluster)", np.linspace(0,8,9)),
+        "TkEle_absdphi": (r"$|\Delta \phi|$ (Tk-Cluster)", np.linspace(0,65,25)),
+        "TkEle_nTkMatch": (r"$N_{\text{Matched Tracks}}$", np.linspace(0,16,17)),
+        "TkEle_PtRatio": (r"$p_T^{\text{Tk}}/p_T^{\text{Cluster}}$", np.linspace(0,32,20)),
     }
     n_col = min(4, len(features))
     n_row = len(features) // n_col + 1

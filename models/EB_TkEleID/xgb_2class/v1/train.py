@@ -62,12 +62,15 @@ for quant in quantizations:
         df_train,
         columns=features,
         target=(-1 , 1 ),
-        saturate={"TkEle_PtRatio": (0, 16),
-                  "TkEle_Tk_chi2RPhi": (0, 64),
-                  "TkEle_Tk_ptFrac": (0, 1),
-                  "TkEle_CryClu_relIso": (0, 16),
+        saturate={"TkEle_PtRatio": (0, 32),
+                  "TkEle_Tk_chi2RPhi": (0, 16),
+                  "TkEle_Tk_ptFrac": (0, 64),
+                  "TkEle_CryClu_relIso": (0, 1),
                   "TkEle_CryClu_pt": (0, 64),
                   "TkEle_CryClu_showerShape": (0, 1),
+                  "TkEle_absdphi": (0, 64),
+                  "TkEle_absdeta": (0, 8),
+                  "TkEle_nTkMatch": (0, 16),
                   },
         precision = quant-1 if quant != "float" else None
     )
@@ -160,7 +163,7 @@ for quant in quantizations:
         }
         train(**fixed_params)
 
-    plot_loss(eval_result, save=f"results/plots/q_{quant}/loss")
+    plot_loss(eval_result, save=f"results/q_{quant}/plots/loss")
 
     #!------------------------------------ Evaluate -----------------------------------!#
     raw_func = lambda x: np.log(x / (1 - x)) / 8
@@ -184,13 +187,13 @@ for quant in quantizations:
     df_train_best = pd.concat([sig_train_best, bkg_train_best])
 
     #!------------------------------------ Plot Loss and scores -----------------------------------!#
-    plot_importance(model, save=f"results/plots/q_{quant}/importance")
+    plot_importance(model, save=f"results/q_{quant}/plots/importance")
     plot_scores(
         df_train,
         df_test[df_test["TkEle_CryClu_pt"] < df_train["TkEle_CryClu_pt"].max()],
         score="score",
         y="TkEle_label",
-        save=f"results/plots/q_{quant}/scores",
+        save=f"results/q_{quant}/plots/scores",
         bins=np.linspace(-1, 1, 30),
         log=True,
     )
@@ -201,7 +204,7 @@ for quant in quantizations:
         df_test[df_test["TkEle_CryClu_pt"] < df_train["TkEle_CryClu_pt"].max()],
         score="score",
         y="TkEle_label",
-        save=f"results/plots/q_{quant}/roc",
+        save=f"results/q_{quant}/plots/roc",
     )
     #!------------------------------------ Best per cluster ----------------------------------!#
     plot_roc(
@@ -211,7 +214,7 @@ for quant in quantizations:
         ],
         score="score",
         y="TkEle_label",
-        save=f"results/plots/q_{quant}/roc_bestTkEle",
+        save=f"results/q_{quant}/plots/roc_bestTkEle",
     )
 
     #!------------------------------------ ROC per pt ----------------------------------!#
@@ -224,7 +227,7 @@ for quant in quantizations:
         var_name="TkEle_CryClu_pt",
         xlim=(-0.025, 0.5),
         var_bins=pt_bins,
-        save=f"results/plots/q_{quant}/roc_pt_bestTkEle_test",
+        save=f"results/q_{quant}/plots/roc_pt_bestTkEle_test",
     )
 
     plot_roc_bins(
@@ -236,7 +239,7 @@ for quant in quantizations:
         var_name="TkEle_CryClu_pt",
         xlim=(-0.025, 0.5),
         var_bins=pt_bins,
-        save=f"results/plots/q_{quant}/roc_pt_bestTkEle_train",
+        save=f"results/q_{quant}/plots/roc_pt_bestTkEle_train",
     )
     quant_aucs[f"{quant}"] = aucs
     quant_models[quant] = model
@@ -244,7 +247,7 @@ for quant in quantizations:
     scaler_quant[quant] = scaler
 
 # %%
-plot_quant_aucs(quant_aucs, pt_bins, save="results/plots/quant_aucs")
+plot_quant_aucs(quant_aucs, pt_bins, save="results/quant_aucs")
 
 
 # %%
