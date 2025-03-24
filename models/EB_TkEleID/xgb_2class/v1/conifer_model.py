@@ -114,7 +114,7 @@ def save(cfg, hls_model, precision):
         f.write(json.dumps(cfg, indent=4))
 
 
-for q in [4,6,8,9,10]:
+for q in [8]:
     convert("vivado", q, predict=False, build=True)
     df_test, cfg, xgb_model, xgb_preds, hls_model, hls_preds = convert("cpp", q, predict=True)
     save(cfg, hls_model,q)

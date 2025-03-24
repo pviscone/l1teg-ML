@@ -48,9 +48,9 @@ df_train, df_test = concatenate(
 # %%
 #!------------------------------------ Train XGBoost Model -----------------------------------!#
 # what = train, optimize
-what = "optimize"
+what = "train"
 
-quantizations = [4, 6, 8, 9, 10, "float"]
+quantizations = [4,5,6,7,8,9,10,"float"]
 quant_aucs = {}
 quant_models = {}
 quant_params = {}
@@ -119,7 +119,7 @@ for quant in quantizations:
             "objective": "binary:logistic",
             "eval_metric": "logloss",
         }
-        num_round = 15
+        num_round = 14
         evallist = [(dtrain, "train"), (dtest_cut, "eval")]
         eval_result = {}
         model = xgb.train(
@@ -135,14 +135,14 @@ for quant in quantizations:
 
     if what == "optimize":
         pbounds = {
-            "max_depth": (10, 13),
-            "learning_rate": (0.36, 0.6),
-            "subsample": (0.7, 1.0),
+            "max_depth": (7, 9),
+            "learning_rate": (0.45, 0.65),
+            "subsample": (0.8, 1.0),
             "colsample_bytree": (0.8, 1.0),
-            "alpha": (100, 300),
-            "lambd": (300, 500),
-            "min_split_loss": (10, 15),
-            "min_child_weight": (60, 100),
+            "alpha": (0, 0.01),
+            "lambd": (300, 700),
+            "min_split_loss": (100, 200),
+            "min_child_weight": (120, 220),
         }
         optimizer = BayesianOptimization(f=train, pbounds=pbounds, random_state=666)
         optimizer.maximize(init_points=10, n_iter=10)
@@ -152,14 +152,14 @@ for quant in quantizations:
 
     elif what == "train":
         fixed_params = {
-            "alpha": 115.86842537080673,
-            "colsample_bytree": 0.8973561043086346,
-            "lambd": 330.73478040000134,
-            "learning_rate": 0.558831631980591,
-            "max_depth": 10,
-            "min_child_weight": 70.81635815001403,
-            "min_split_loss": 12.805172105675538,
-            "subsample": 0.9707141169676181,
+            #"alpha": 115.86842537080673,
+            "colsample_bytree": 1.,
+            "lambd": 0.,
+            "learning_rate": 0.55,
+            "max_depth": 20,
+            "min_child_weight": 600,
+            "min_split_loss": 100.,
+            "subsample": 1.,
         }
         train(**fixed_params)
 
