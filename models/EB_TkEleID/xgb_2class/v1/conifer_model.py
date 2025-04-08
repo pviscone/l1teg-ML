@@ -66,6 +66,7 @@ def convert(backend, precision, build = False, predict = False):
         cfg['InputPrecision'] = f"ap_fixed<{precision},1,AP_RND_CONV,AP_SAT>"
         cfg['ThresholdPrecision'] = f"ap_fixed<{precision},1,AP_RND_CONV,AP_SAT>"
         cfg['ScorePrecision'] =  "ap_fixed<11,4,AP_RND_CONV,AP_SAT>"
+        cfg['ClockPeriod'] = 4.16666666
 
 
     elif backend == "py":
