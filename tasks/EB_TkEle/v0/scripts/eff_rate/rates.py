@@ -1,0 +1,46 @@
+import os
+import sys
+import copy
+
+sys.path.append(os.environ["ANALYSIS_DIR"])
+
+import uproot
+import awkward as ak
+import pandas as pd
+import numpy as np
+import hist
+
+def _plot_rate_normal(teff, obj, path_rate, branch_rate):
+    rate_hist = uproot.open(path_rate)[branch_rate].to_hist()
+    teff.add(rate_hist, label=obj)
+    return teff
+
+def _plot_rate_varbins(tRate, obj, path, score, rateVar, binVar, bins, thrs):
+    events = uproot.open(path)["Events"].arrays()
+    events["TkEle_ev_idx"] = ak.ones_like(events[events.fields[0]]) * np.arange(
+        len(events)
+    )
+    events["__TkEle_weight"] = ak.ones_like(events[events.fields[0]]) * events["weight"].to_numpy()
+
+    events = {k: ak.ravel(events[k]).to_numpy() for k in events.fields if k != "weight"}
+    df = pd.DataFrame(events)
+    df_list = []
+    for idx, low_edge in enumerate(bins):
+        if low_edge == bins[-1]:
+            new_df = df[df[binVar] >= low_edge]
+        else:
+            new_df = df[
+                np.bitwise_and(df[binVar] >= low_edge, df[binVar] < bins[idx + 1])
+            ]
+
+        new_df = new_df[new_df[score] > thrs[idx]]
+        df_list.append(new_df)
+    new_df = pd.concat(df_list)
+    new_df = new_df.loc[
+        new_df.groupby(["TkEle_ev_idx"])[rateVar].idxmax()
+    ].reset_index()
+
+    h = hist.Hist(hist.axis.Regular(120, 0, 120), storage=hist.storage.Weight())
+    h.fill(new_df[rateVar].to_numpy(), weight=new_df["__TkEle_weight"].to_numpy())
+    tRate.add(h, label=obj)
+    return tRate

@@ -1,0 +1,109 @@
+base_path: /afs/cern.ch/work/p/pviscone/L1T/cmgrdf-cli/temp
+
+
+#Denom and vars are for eff plots only
+denoms:
+    denom: &denom "era{global_tag}/0common_0_gen/{variable}.root:DoubleElectron_PU200"
+    test_denom: &test_denom "era{global_tag}/eval_bdt_0_gen/{variable}.root:DoubleElectron_PU200_test"
+
+#var, branch, xlabel (for Efficiency)
+vars:
+    GenEl_pt:
+        snapBranch: "TkEle_GenEle_pt"
+        xlabel: "Gen. $p_{T}$ [GeV]"
+        rebin: 3
+        xlim: [-0.2, 100]
+        ylim: [0., 1.1]
+    GenEl_eta:
+        snapBranch: "TkEle_GenEle_eta"
+        xlabel: "Gen. $\\eta$"
+        xlim: [-1.5, 1.5]
+        ylim: [0., 1.1]
+
+
+objs_map:
+    EllipticID:
+        Eff_num: "era{global_tag}/TkEleTightSig_1_TkEleTightSig/{variable}.root:DoubleElectron_PU200"
+        Eff_den: *denom
+        Rate: "era{global_tag}/TkEleTightBkg_1_TkEleTightBkg/TkEleTight_pt.root:MinBias"
+        global_tag: "140Xv0B6"
+    TkEm:
+        Eff_num: "era{global_tag}/TkEmL2Sig_1_TkEmL2Sig/{variable}.root:DoubleElectron_PU200"
+        Eff_den: *denom
+        Rate: "era{global_tag}/TkEmL2Bkg_1_TkEmL2Bkg/TkEmL2_pt.root:MinBias"
+        global_tag: "140Xv0B9"
+    CompositeID (??): #Loose ellipticID
+        Eff_num: "era{global_tag}/TkEleLooseSig_1_TkEleLooseSig/{variable}.root:DoubleElectron_PU200"
+        Eff_den: *denom
+        Rate: "era{global_tag}/TkEleLooseBkg_1_TkEleLooseBkg/TkEleLoose_pt.root:MinBias"
+        global_tag: "140Xv0B9"
+    CompositeID (???): #Cut on hwQual, god knows what it is
+        Eff_num: "era{global_tag}/TkEleTightSig_1_TkEleTightSig/{variable}.root:DoubleElectron_PU200"
+        Eff_den: *denom
+        Rate: "era{global_tag}/TkEleTightBkg_1_TkEleTightBkg/TkEleTight_pt.root:MinBias"
+        global_tag: "140Xv0B9"
+    Loose EllipticID:
+        global_tag: "140Xv0B9"
+        #Eff
+        Eff_num: "zsnap/era{global_tag}/eval_bdt_1_full/DoubleElectron_PU200_test.root"
+        Eff_den: *test_denom
+        genIdx: "TkEle_GenEle_idx"
+        #Rate
+        Rate: "zsnap/era{global_tag}/eval_bdt_1_full/MinBias_test.root"
+        rateVar: "TkEle_CryClu_pt"
+        #Both
+        score: "TkEle_score"
+        binVar: "TkEle_CryClu_pt"
+        Bins: [    0,     5,     10,    20,    30,    50]
+        Thrs: [ -1,  -1,  -1,   -1, -1,  -1]
+    TkEle (Tight):
+        global_tag: "140Xv0B9"
+        #Eff
+        Eff_num: "zsnap/era{global_tag}/eval_bdt_1_full/DoubleElectron_PU200_test.root"
+        Eff_den: *test_denom
+        genIdx: "TkEle_GenEle_idx"
+        #Rate
+        Rate: "zsnap/era{global_tag}/eval_bdt_1_full/MinBias_test.root"
+        rateVar: "TkEle_CryClu_pt"
+        #Both
+        score: "TkEle_score"
+        binVar: "TkEle_CryClu_pt"
+        Bins: [    0,     5,     10,    20,    30,    50]
+        Thrs: [ 1.00,  0.25,  0.0,   -0.025, -0.1,  0.05]
+    TkEle (Loose):
+        global_tag: "140Xv0B9"
+        #Eff
+        Eff_num: "zsnap/era{global_tag}/eval_bdt_1_full/DoubleElectron_PU200_test.root"
+        Eff_den: *test_denom
+        genIdx: "TkEle_GenEle_idx"
+        #Rate
+        Rate: "zsnap/era{global_tag}/eval_bdt_1_full/MinBias_test.root"
+        rateVar: "TkEle_CryClu_pt"
+        #Both
+        score: "TkEle_score"
+        binVar: "TkEle_CryClu_pt"
+        Bins: [    0,     5,     10,    20,    30,    50]
+        Thrs: [0.17,  0.018,  -0.08,   -0.11, -0.215,  -0.15]
+
+
+default_rate_kwargs: &default_rate_kwargs
+    xlim: [0,60]
+    ylim: [1, 100000]
+    xlabel: "Online $p_{T}$ [GeV]"
+
+plots:
+    All:
+        rate_kwargs: *default_rate_kwargs
+        items:
+            - TkEm
+            - Loose EllipticID
+            - EllipticID
+            - TkEle (Tight)
+            - TkEle (Loose)
+    Main:
+        rate_kwargs: *default_rate_kwargs
+        items:
+            - TkEm
+            - EllipticID
+            - TkEle (Tight)
+            - TkEle (Loose)

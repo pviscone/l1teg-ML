@@ -1,0 +1,7 @@
+[submodule "cmgrdf-cli"]
+	path = cmgrdf-cli
+	url = git@github.com:pviscone/cmgrdf-cli.git
+	branch = dev_1_2_0
+[submodule "tasks/EB_TkEle/v0/cpp/conifer/Vitis_HLS"]
+	path = tasks/EB_TkEle/v0/cpp/conifer/Vitis_HLS
+	url = https://github.com/Xilinx/hls-utilities.git
