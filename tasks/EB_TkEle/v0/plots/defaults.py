@@ -35,6 +35,11 @@ cmgrdf_cli.defaults.name_defaults = OrderedDict({
         label="($1) $p_{T}^{\\text{Clu}}/p_{T}^{\\text{Tk}}$ [GeV]",
         log="counts",
     ),
+    "(.*)_idScore(.*)": dict(
+        bins=(100, -1, 1),
+        label="($1) ($2) Score",
+        log="counts",
+    ),
     "(.*)_score(.*)": dict(
         bins=(100, -1, 1),
         label="($1) ($2) Score",

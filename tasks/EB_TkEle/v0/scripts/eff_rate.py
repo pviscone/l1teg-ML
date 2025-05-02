@@ -2,14 +2,14 @@ import os
 import sys
 import copy
 
-sys.path.append(os.environ["ANALYSIS_DIR"])
+sys.path.append(os.environ["PWD"])
 
 import typer
 import yaml
 from typing import Annotated
 import re
 
-from utils.plotters import TEfficiency, TRate
+from cmgrdf_cli.plots.plotters import TEfficiency, TRate
 from eff_rate.efficiency import _plot_efficiency_normal, _plot_efficiency_varbins
 from eff_rate.rates import _plot_rate_normal, _plot_rate_varbins
 
@@ -18,7 +18,7 @@ app = typer.Typer(
 )
 
 
-def _plot_eff_rate(cfg, name, output, plot_dict, obj_pattern):
+def _plot_eff_rate(cfg, name, output, plot_dict, obj_pattern, lines):
     objs = plot_dict["items"]
     base_path = cfg["base_path"]
     objs_map = cfg["objs_map"]
@@ -73,6 +73,15 @@ def _plot_eff_rate(cfg, name, output, plot_dict, obj_pattern):
 
                             bins = objs_map[obj]["Bins"]
                             thrs = objs_map[obj]["Thrs"]
+                            if lines:
+                                for b in bins:
+                                    tEff.add_line(
+                                        x=b,
+                                        linestyle="--",
+                                        alpha=0.2,
+                                        linewidth=1,
+                                        color="red",
+                                    )
 
                             tEff = _plot_efficiency_varbins(
                                 tEff,
@@ -94,6 +103,15 @@ def _plot_eff_rate(cfg, name, output, plot_dict, obj_pattern):
                             path_rate = os.path.join(base_path, path_rate)
                             _plot_rate_normal(tRate, obj, path_rate, branch_rate)
                         else:
+                            if lines:
+                                for b in bins:
+                                    tRate.add_line(
+                                        x=b,
+                                        linestyle="--",
+                                        alpha=0.2,
+                                        linewidth=1,
+                                        color="red",
+                                    )
                             path = os.path.join(base_path, rate)
                             score = objs_map[obj]["score"]
                             rateVar = objs_map[obj]["rateVar"]
@@ -114,7 +132,16 @@ def plot_eff_rate(
     cfg: Annotated[str, typer.Option("-c", "--cfg", help="Path to the yaml conf file")],
     output: Annotated[str, typer.Option("-o", "--output", help="Output directory")],
     obj_pattern: str = typer.Option(
-        ".*", "-p", "--pattern", help="Objects to plot (regex pattern, comma separater)"
+        ".*", "--objs", help="Objects to plot (regex pattern, comma separater)"
+    ),
+    ncpu: int = typer.Option(
+        mp.cpu_count(), "-j", "--ncpus", help="Number of cpus to use for plotting"
+    ),
+    plot_pattern: str = typer.Option(
+        ".*", "--plots", help="Plots to plot (regex pattern, comma separater)"
+    ),
+    lines : bool = typer.Option(
+        False, "--lines", help="Add lines to the plots"
     ),
 ):
     os.makedirs(output, exist_ok=True)
@@ -124,11 +151,15 @@ def plot_eff_rate(
     plots = cfg["plots"]
     pool_data = []
     for plot in plots:
-        pool_data.append((cfg, plot, output, plots[plot], obj_pattern))
-    with mp.Pool(mp.cpu_count()) as p:
-        p.starmap(_plot_eff_rate, pool_data, chunksize=max(1, len(pool_data)//mp.cpu_count()))
-
-        #_plot_eff_rate(cfg, plot, output, plots[plot], obj_pattern)
+        if not re.match(plot_pattern, plot):
+            continue
+        pool_data.append((cfg, plot, output, plots[plot], obj_pattern, lines))
+    if ncpu > 1:
+        with mp.Pool(ncpu) as p:
+            p.starmap(_plot_eff_rate, pool_data, chunksize=max(1, len(pool_data)//mp.cpu_count()))
+    else:
+        for d in pool_data:
+            _plot_eff_rate(*d)
 
 
 if __name__ == "__main__":

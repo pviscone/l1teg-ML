@@ -2,7 +2,7 @@ import os
 import sys
 import copy
 
-sys.path.append(os.environ["ANALYSIS_DIR"])
+sys.path.append(os.environ["PWD"])
 
 import uproot
 import awkward as ak
@@ -31,10 +31,10 @@ def _plot_efficiency_varbins(
     thrs,
 ):
     events = uproot.open(path_num)["Events"].arrays()
-    events["TkEle_ev_idx"] = ak.ones_like(events[events.fields[0]]) * np.arange(
+    events["obj_ev_idx"] = ak.ones_like(events[score]) * np.arange(
         len(events)
     )
-    events = {k: ak.ravel(events[k]).to_numpy() for k in events.fields if k!="weight"}
+    events = {k: ak.ravel(events[k]).to_numpy() for k in [binVar, variable, score, genidx, "obj_ev_idx"]}
     df = pd.DataFrame(events)
 
     den = uproot.open(path_den)[branch_den].to_hist()
@@ -53,7 +53,7 @@ def _plot_efficiency_varbins(
 
     new_df = pd.concat(df_list)
     new_df = new_df.loc[
-        new_df.groupby(["TkEle_ev_idx", genidx])[score].idxmax()
+        new_df.groupby(["obj_ev_idx", genidx])[score].idxmax()
     ].reset_index()
 
     num_h = copy.deepcopy(den)

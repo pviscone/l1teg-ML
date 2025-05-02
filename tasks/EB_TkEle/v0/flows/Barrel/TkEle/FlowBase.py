@@ -11,14 +11,21 @@ tk_name = "DecTkBarrel"
 genele_name = "GenEl"
 
 
-def flow():
+def flow(region="EB"):
+    if region == "EB":
+        region_sel = " < 1.479"
+    elif region == "EE":
+        region_sel = " > 1.479"
+    else:
+        raise ValueError("Invalid region. Choose 'EB' or 'EE'.")
+
     tree = Tree()
 
     tree.add(
         "matching",
         [
             #! ---------- Acceptance selection --------- #
-            DefineSkimmedCollection("GenEl", mask="abs(GenEl_eta) < 1.479"),
+            DefineSkimmedCollection("GenEl", mask=f"abs(GenEl_eta) {region_sel}"),
             #! ----------------- Alias ----------------- #
             AliasCollection("GenEle", genele_name),
             AliasCollection("CryClu", cryclu_name),
