@@ -8,6 +8,7 @@ import typer
 import yaml
 from typing import Annotated
 import re
+import matplotlib.pyplot as plt
 
 from cmgrdf_cli.plots.plotters import TEfficiency, TRate
 from eff_rate.efficiency import _plot_efficiency_normal, _plot_efficiency_varbins
@@ -103,22 +104,29 @@ def _plot_eff_rate(cfg, name, output, plot_dict, obj_pattern, lines):
                             path_rate = os.path.join(base_path, path_rate)
                             _plot_rate_normal(tRate, obj, path_rate, branch_rate)
                         else:
-                            if lines:
-                                for b in bins:
-                                    tRate.add_line(
-                                        x=b,
-                                        linestyle="--",
-                                        alpha=0.2,
-                                        linewidth=1,
-                                        color="red",
-                                    )
+                            bins = objs_map[obj]["Bins"]
+                            off_scaling = objs_map[obj].get("Offline_scaling", None)
                             path = os.path.join(base_path, rate)
                             score = objs_map[obj]["score"]
                             rateVar = objs_map[obj]["rateVar"]
                             binVar = objs_map[obj]["binVar"]
-                            bins = objs_map[obj]["Bins"]
                             thrs = objs_map[obj]["Thrs"]
-                            _plot_rate_varbins(tRate, obj, path, score, rateVar, binVar, bins, thrs)
+                            if off_scaling:
+                                tRate.ax.set_xlabel("Offline $p_T$ [GeV]")
+                            _plot_rate_varbins(tRate, obj, path, score, rateVar, binVar, bins, thrs, off_scaling)
+                            if lines:
+                                for b in bins:
+                                    if off_scaling:
+                                        scale_fun = eval(f"lambda online_pt: {off_scaling}")
+                                    else:
+                                        scale_fun = lambda x: x
+                                    tRate.add_line(
+                                        x=scale_fun(b),
+                                        linestyle="--",
+                                        alpha=0.2,
+                                        linewidth=1,
+                                        color=plt.gca().lines[-1].get_color(),
+                                    )
 
         os.makedirs(os.path.join(output, f"{variable_name}"), exist_ok=True)
         tEff.save(os.path.join(output, f"{variable_name}/{name}_eff.pdf"))

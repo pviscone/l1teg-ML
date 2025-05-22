@@ -21,4 +21,4 @@ def add_tag(tags):
 #v131Xv9A is DPS-note (new hgcal id)
 #140Xv0B12 is 142X-int (boh)
 #140Xv0B18 is 142X-int-gct (new hgcal id + unpacker)
-add_tag(["v131Xv3O", "v131Xv9A", "140Xv0B18"])
+add_tag(["v131Xv3O", "v131Xv9A", "140Xv0B18", "140Xv0C1"])

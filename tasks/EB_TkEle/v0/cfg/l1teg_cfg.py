@@ -17,5 +17,5 @@ def add_tag(tags):
         lumi[tag] = 0.001
 
 #140Xv0B6 contains the baseline objects (Barrel EllipticId, Endcap ???)
-add_tag(["140Xv0B6", "140Xv0B9"])
+add_tag(["140Xv0B6", "140Xv0B9", "140Xv0C1"])
 

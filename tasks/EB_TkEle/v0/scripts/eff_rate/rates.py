@@ -15,7 +15,13 @@ def _plot_rate_normal(teff, obj, path_rate, branch_rate):
     teff.add(rate_hist, label=obj)
     return teff
 
-def _plot_rate_varbins(tRate, obj, path, score, rateVar, binVar, bins, thrs):
+def _plot_rate_varbins(tRate, obj, path, score, rateVar, binVar, bins, thrs, off_scaling):
+    if off_scaling:
+        scale_fun = eval(f"lambda online_pt: {off_scaling}")
+    else:
+        scale_fun = lambda x: x
+
+
     events = uproot.open(path)["Events"].arrays()
     events["obj_ev_idx"] = ak.ones_like(events[score]) * np.arange(
         len(events)
@@ -41,6 +47,6 @@ def _plot_rate_varbins(tRate, obj, path, score, rateVar, binVar, bins, thrs):
     ].reset_index()
 
     h = hist.Hist(hist.axis.Regular(120, 0, 120), storage=hist.storage.Weight())
-    h.fill(new_df[rateVar].to_numpy(), weight=new_df["__obj_weight"].to_numpy())
+    h.fill(scale_fun(new_df[rateVar].to_numpy()), weight=new_df["__obj_weight"].to_numpy())
     tRate.add(h, label=obj)
     return tRate

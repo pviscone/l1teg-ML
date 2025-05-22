@@ -1,0 +1,75 @@
+base_path: /afs/cern.ch/work/p/pviscone/L1T/l1teg-ML/tasks/EB_TkEle/v0/tempEB
+
+
+#Denom and vars are for eff plots only
+denoms:
+    denom: &denom "era{global_tag}/0common_0_gen/{variable}.root:DoubleElectron_PU200"
+
+#var, branch, xlabel (for Efficiency)
+vars:
+    GenEl_pt:
+        snapBranch: "GenEl_pt"
+        xlabel: "Gen. $p_{T}$ [GeV]"
+        rebin: 3
+        xlim: [-0.2, 100]
+        ylim: [0., 1.1]
+
+
+objs_map:
+    AR2024 (Tight):
+        global_tag: "v131Xv3O"
+        Eff_num: "era{global_tag}/TkEleL2Tight_All_2_full/{variable}.root:DoubleElectron_PU200"
+        Eff_den: *denom
+        Rate: "zsnap/era{global_tag}/TkEleL2Tight_All_2_full/MinBias.root"
+        Offline_scaling: "1.17 * online_pt + 1.538"
+        rateVar: "TkEleL2_pt"
+        #Both
+        score: "TkEleL2_idScore"
+        binVar: "TkEleL2_pt"
+        Bins: [ 0]
+        Thrs: [-1]
+    151X (Tight):
+        global_tag: "140Xv0C1"
+        #Eff
+        Eff_num: "zsnap/era{global_tag}/TkEleL2Loose_All_2_full/DoubleElectron_PU200.root" #MUST BE LOOSE
+        Eff_den: *denom
+        genIdx: "TkEleL2_genIdx"
+        #Rate
+        Rate: "zsnap/era{global_tag}/TkEleL2Loose_All_2_full/MinBias.root"
+        Offline_scaling: "1.181 * online_pt + 3.621"
+        rateVar: "TkEleL2_pt"
+        #Both
+        score: "TkEleL2_idScore"
+        binVar: "TkEleL2_pt"
+        Bins: [ 0, 5, 10, 15, 30]
+        Thrs: [0, 0.02, -0.02, -0.08, -0.11]
+    Loose Elliptic:
+        global_tag: "140Xv0C1"
+        #Eff
+        Eff_num: "zsnap/era{global_tag}/TkEleL2Loose_All_2_full/DoubleElectron_PU200.root" #MUST BE LOOSE
+        Eff_den: *denom
+        genIdx: "TkEleL2_genIdx"
+        #Rate
+        Rate: "zsnap/era{global_tag}/TkEleL2Loose_All_2_full/MinBias.root"
+        Offline_scaling: "1.181 * online_pt + 3.621"
+        rateVar: "TkEleL2_pt"
+        #Both
+        score: "TkEleL2_idScore"
+        binVar: "TkEleL2_pt"
+        Bins: [ 0]
+        Thrs: [-1]
+
+
+
+default_rate_kwargs: &default_rate_kwargs
+    xlim: [0,80]
+    ylim: [1, 100000]
+    xlabel: "Online $p_{T}$ [GeV]"
+
+plots:
+    Tight:
+        rate_kwargs: *default_rate_kwargs
+        items:
+            - AR2024 (Tight)
+            - 151X (Tight)
+            - Loose Elliptic
