@@ -19,13 +19,13 @@ app = typer.Typer(
 )
 
 
-def _plot_eff_rate(cfg, name, output, plot_dict, obj_pattern, lines):
+def _plot_eff_rate(cfg, name, output, plot_dict, obj_pattern, lines, base_path):
     objs = plot_dict["items"]
-    base_path = cfg["base_path"]
     objs_map = cfg["objs_map"]
     rate_kwargs = plot_dict.get("rate_kwargs", {})
     tRate = TRate(cmstext="Phase-2 Simulation Preliminary",
         lumitext="PU 200 (14 TeV)",
+        cmstextsize=18,
         grid=False, **rate_kwargs)
     for _ivar, variable in enumerate(cfg["vars"]):
         variable_name = variable
@@ -36,6 +36,7 @@ def _plot_eff_rate(cfg, name, output, plot_dict, obj_pattern, lines):
             **variable_dict,
             cmstext="Phase-2 Simulation Preliminary",
             lumitext="PU 200 (14 TeV)",
+            cmstextsize=18,
             grid=False,
         )
         tEff.add_line(y=1, linestyle="--", alpha=0.15, linewidth=1, color="black")
@@ -138,7 +139,10 @@ import multiprocessing as mp
 @app.command()
 def plot_eff_rate(
     cfg: Annotated[str, typer.Option("-c", "--cfg", help="Path to the yaml conf file")],
-    output: Annotated[str, typer.Option("-o", "--output", help="Output directory")],
+    base_path: Annotated[str, typer.Option("-i", "--input_path", help="Base directory")],
+    output: str = typer.Option(
+        "zeff", "-o", "--out", help="Output folder (relative to base_path)"
+    ),
     obj_pattern: str = typer.Option(
         ".*", "--objs", help="Objects to plot (regex pattern, comma separater)"
     ),
@@ -152,6 +156,7 @@ def plot_eff_rate(
         False, "--lines", help="Add lines to the plots"
     ),
 ):
+    output = os.path.join(base_path, output)
     os.makedirs(output, exist_ok=True)
     os.system(f"cp -f {cfg} {output}")
     with open(cfg, "r") as f:
@@ -161,7 +166,7 @@ def plot_eff_rate(
     for plot in plots:
         if not re.match(plot_pattern, plot):
             continue
-        pool_data.append((cfg, plot, output, plots[plot], obj_pattern, lines))
+        pool_data.append((cfg, plot, output, plots[plot], obj_pattern, lines, base_path))
     if ncpu > 1:
         with mp.Pool(ncpu) as p:
             p.starmap(_plot_eff_rate, pool_data, chunksize=max(1, len(pool_data)//mp.cpu_count()))

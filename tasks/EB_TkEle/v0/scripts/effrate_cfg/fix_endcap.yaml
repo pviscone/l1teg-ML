@@ -1,6 +1,3 @@
-base_path: /afs/cern.ch/work/p/pviscone/L1T/l1teg-ML/tasks/EB_TkEle/v0/temp
-
-
 #Denom and vars are for eff plots only
 denoms:
     denom: &denom "era{global_tag}/0common_0_gen/{variable}.root:DoubleElectron_PU200"
