@@ -71,8 +71,8 @@ def flow(obj_name="TkEleL2", region="EB"):
 
     tree.add_to_all("{leaf}_All",[
         #? ----------------- Obj background ---------------- #
-        #Take only the highest pT object in the event
-        DefineSkimmedCollection(obj.name, indices="RVecI({(int) ROOT::VecOps::ArgMax(<obj.name>_pt)})".replace("<obj.name>", obj.name), samplePattern="MinBias.*", plot=f"{obj.name}Bkg"),
+        #Take only the highest pT object in the event (NO!!!)
+        #DefineSkimmedCollection(obj.name, indices="RVecI({(int) ROOT::VecOps::ArgMax(<obj.name>_pt)})".replace("<obj.name>", obj.name), samplePattern="MinBias.*", plot=f"{obj.name}Bkg"),
         ReDefine("GenEl_pt", f"RVecF(nTkEleL2,0.)", samplePattern="MinBias.*"),
 
         #? ----------------- Obj signal ---------------- #

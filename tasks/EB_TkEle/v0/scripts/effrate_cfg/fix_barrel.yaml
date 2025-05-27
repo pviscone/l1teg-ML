@@ -15,9 +15,9 @@ vars:
 objs_map:
     AR2024 (Tight):
         global_tag: "v131Xv3O"
-        Eff_num: "era{global_tag}/TkEleL2Tight_All_2_full/{variable}.root:DoubleElectron_PU200"
+        Eff_num: "era{global_tag}/TkEleL2Tight_All_1_full/{variable}.root:DoubleElectron_PU200"
         Eff_den: *denom
-        Rate: "zsnap/era{global_tag}/TkEleL2Tight_All_2_full/MinBias.root"
+        Rate: "zsnap/era{global_tag}/TkEleL2Tight_All_1_full/MinBias.root"
         Offline_scaling: "1.17 * online_pt + 1.538"
         rateVar: "TkEleL2_pt"
         #Both
@@ -28,26 +28,26 @@ objs_map:
     151X (Tight):
         global_tag: "140Xv0C1"
         #Eff
-        Eff_num: "zsnap/era{global_tag}/TkEleL2Loose_All_2_full/DoubleElectron_PU200.root" #MUST BE LOOSE
+        Eff_num: "zsnap/era{global_tag}/TkEleL2Loose_All_1_full/DoubleElectron_PU200.root" #MUST BE LOOSE
         Eff_den: *denom
         genIdx: "TkEleL2_genIdx"
         #Rate
-        Rate: "zsnap/era{global_tag}/TkEleL2Loose_All_2_full/MinBias.root"
+        Rate: "zsnap/era{global_tag}/TkEleL2Loose_All_1_full/MinBias.root"
         Offline_scaling: "1.181 * online_pt + 3.621"
         rateVar: "TkEleL2_pt"
         #Both
         score: "TkEleL2_idScore"
         binVar: "TkEleL2_pt"
-        Bins: [ 0, 5, 10, 15, 30]
-        Thrs: [0, 0.02, -0.02, -0.08, -0.11]
+        Bins: [ 0., 5, 10, 15, 30]
+        Thrs: [0.17, 0.1, -0.0, -0.08, -0.11]
     Loose Elliptic:
         global_tag: "140Xv0C1"
         #Eff
-        Eff_num: "zsnap/era{global_tag}/TkEleL2Loose_All_2_full/DoubleElectron_PU200.root" #MUST BE LOOSE
+        Eff_num: "zsnap/era{global_tag}/TkEleL2Loose_All_1_full/DoubleElectron_PU200.root" #MUST BE LOOSE
         Eff_den: *denom
         genIdx: "TkEleL2_genIdx"
         #Rate
-        Rate: "zsnap/era{global_tag}/TkEleL2Loose_All_2_full/MinBias.root"
+        Rate: "zsnap/era{global_tag}/TkEleL2Loose_All_1_full/MinBias.root"
         Offline_scaling: "1.181 * online_pt + 3.621"
         rateVar: "TkEleL2_pt"
         #Both
