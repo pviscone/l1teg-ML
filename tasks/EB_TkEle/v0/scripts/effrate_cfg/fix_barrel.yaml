@@ -25,6 +25,21 @@ objs_map:
         binVar: "TkEleL2_pt"
         Bins: [ 0]
         Thrs: [-1]
+    CMSSW:
+        global_tag: "140Xv0C1"
+        #Eff
+        Eff_num: "zsnap/era{global_tag}/TkEleL2Loose_All_1_full/DoubleElectron_PU200.root" #MUST BE LOOSE
+        Eff_den: *denom
+        genIdx: "TkEleL2_genIdx"
+        #Rate
+        Rate: "zsnap/era{global_tag}/TkEleL2Loose_All_1_full/MinBias.root"
+        Offline_scaling: "1.181 * online_pt + 3.621"
+        rateVar: "TkEleL2_pt"
+        #Both
+        score: "TkEleL2_idScore"
+        binVar: "TkEleL2_pt"
+        Bins: [0, 5, 10, 20, 30, 50]
+        Thrs: [0.17, 0.018, -0.08, -0.11, -0.215, -0.15]
     151X (Tight):
         global_tag: "140Xv0C1"
         #Eff
@@ -38,8 +53,8 @@ objs_map:
         #Both
         score: "TkEleL2_idScore"
         binVar: "TkEleL2_pt"
-        Bins: [ 0., 5, 10, 15, 30]
-        Thrs: [0.17, 0.1, -0.0, -0.08, -0.11]
+        Bins: [ 0, 5, 10, 30]
+        Thrs: [0.17, 0.018, -0.08, -0.11]
     Loose Elliptic:
         global_tag: "140Xv0C1"
         #Eff
@@ -68,5 +83,6 @@ plots:
         rate_kwargs: *default_rate_kwargs
         items:
             - AR2024 (Tight)
+            - CMSSW
             - 151X (Tight)
             - Loose Elliptic
