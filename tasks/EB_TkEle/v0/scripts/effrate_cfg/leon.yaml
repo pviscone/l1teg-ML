@@ -1,0 +1,41 @@
+#Denom and vars are for eff plots only
+denoms:
+    denom: &denom "era{global_tag}/eval_bdt_0_gen/{variable}.root:DoubleElectron_PU200_test"
+
+#var, branch, xlabel (for Efficiency)
+vars:
+    GenEl_pt:
+        snapBranch: "TkEle_GenEle_pt"
+        xlabel: "Gen. $p_{T}$ [GeV]"
+        rebin: 3
+        xlim: [-0.2, 100]
+        ylim: [0., 1.1]
+
+
+objs_map:
+    151X (Tight):
+        global_tag: "140Xv0B9"
+        #Eff
+        Eff_num: "zsnap/era{global_tag}/eval_bdt_1_full/DoubleElectron_PU200_test.root" 
+        Eff_den: *denom
+        genIdx: "TkEle_GenEle_idx"
+        #Rate
+        Rate: "zsnap/era{global_tag}/eval_bdt_1_full/MinBias_test.root"
+        Offline_scaling: "1.181 * online_pt + 3.621"
+        rateVar: "TkEle_CryClu_pt"
+        #Both
+        score: "TkEle_score"
+        binVar: "TkEle_CryClu_pt"
+        Bins: [ 0, 5, 10, 30]
+        Thrs: [0.17, 0.018, -0.08, -0.11]
+
+default_rate_kwargs: &default_rate_kwargs
+    xlim: [0,80]
+    ylim: [1, 100000]
+    xlabel: "Online $p_{T}$ [GeV]"
+
+plots:
+    Tight:
+        rate_kwargs: *default_rate_kwargs
+        items:
+            - 151X (Tight)

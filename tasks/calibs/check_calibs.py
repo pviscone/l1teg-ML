@@ -2,6 +2,7 @@ import uproot
 import numpy as np
 import matplotlib.pyplot as plt
 import mplhep
+import os
 
 from math import ceil, floor, sqrt
 from array import array
@@ -39,9 +40,9 @@ pt_bins = np.linspace(1,100,30)
 centers = (pt_bins[:-1]+pt_bins[1:])/2
 
 
-
-corr = uproot.open("emcorr_barrel.root")
-tree = uproot.open("perfTuple_ElePhotons_PU0.root")["ntuple"]["tree"].arrays()
+folder = "/eos/user/p/pviscone/www/calibs/calibBestPhotonExtended"
+corr = uproot.open(os.path.join(folder, "emcorr_barrel.root"))
+tree = uproot.open("/eos/cms/store/cmst3/group/l1tr/pviscone/l1teg/fp_perfTuple/perfTuple_ElePhotons_PU0.root")["ntuple"]["tree"].arrays()
 
 pt = tree["L1RawBarrelCalo_ptbest"].to_numpy()
 mc_pt = tree["mc_pt"].to_numpy()
@@ -74,10 +75,10 @@ for pdg in [11,22]:
         high_err.append(err_max)
     fig, ax = plt.subplots()
     ax.set_title(f"pdgid {pdg}")
-    ax.errorbar(centers, median, yerr=np.array([low_err, high_err]))
+    ax.errorbar(centers, median, yerr=np.array([low_err, high_err]), marker="^")
     ax.set_xlabel("$Gen p_T$")
     ax.axhline(1., color = "red", alpha = 0.5, linestyle="--")
-    ax.set_ylim(0,2)
+    ax.set_ylim(0.75,1.5)
     ax.set_ylabel("Median $p_T^{\\text{Corr. RECO}}/ p_T^{GEN}$")
     fig.savefig(f"calibs_{pdg}.pdf")
 
