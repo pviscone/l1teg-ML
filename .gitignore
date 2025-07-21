@@ -116,3 +116,5 @@ ENV/
 *.jpeg
 **/results
 **/temp*/*
+**/plots
+**/outputs
