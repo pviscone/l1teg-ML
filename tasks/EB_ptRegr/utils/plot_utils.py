@@ -88,6 +88,7 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, sav
                         yerr=[medians[eta_idx][label] - perc5s[eta_idx][label], perc95s[eta_idx][label] - medians[eta_idx][label]],
                         color=colors[idx], alpha=0.5, label=f"{label} 5/95%", marker='o', linestyle='-')
         ax.legend(fontsize=15)
+        ax.set_ylim(0.3,1.7)
         fig.savefig(f"{savefolder}/aresponse_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.pdf")
         fig.savefig(f"{savefolder}/aresponse_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.png")
         plt.close(fig)
