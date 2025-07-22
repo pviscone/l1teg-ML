@@ -15,6 +15,7 @@ def plot_ptratio_distributions(df,
                                eta_,
                                eta_bins = None,
                                genpt_bins = None,
+                               plots = False,
                                savefolder = "plots"):
     os.makedirs(savefolder, exist_ok=True)
     if eta_bins is None:
@@ -37,11 +38,12 @@ def plot_ptratio_distributions(df,
         perc5s.append({key:np.array([]) for key in ptratio_dict.keys()})
         perc95s.append({key:np.array([]) for key in ptratio_dict.keys()})
         for genpt_min, genpt_max in zip(genpt_bins[:-1], genpt_bins[1:]):
-            fig, ax = plt.subplots()
-            ax.axvline(1, color='black', linestyle=':', alpha=0.3)
-            ax.set_title(f"Eta: [{eta_min},{eta_max}], GenPt: [{genpt_min},{genpt_max}]")
-            ax.set_xlabel("TkEle $p_{T}$ / Gen $p_{T}$")
-            ax.set_ylabel("Density")
+            if plots:
+                fig, ax = plt.subplots()
+                ax.axvline(1, color='black', linestyle=':', alpha=0.3)
+                ax.set_title(f"Eta: [{eta_min},{eta_max}], GenPt: [{genpt_min},{genpt_max}]")
+                ax.set_xlabel("TkEle $p_{T}$ / Gen $p_{T}$")
+                ax.set_ylabel("Density")
             for idx, (label, ptratio) in enumerate(ptratio_dict.items()):
                 ptratio_eta = ptratio[mask]
                 mask_genpt = (genpt_eta >= genpt_min) & (genpt_eta < genpt_max)
@@ -49,23 +51,24 @@ def plot_ptratio_distributions(df,
                 median = np.median(ptratio_masked)
                 perc5 = np.percentile(ptratio_masked, 5)
                 perc95 = np.percentile(ptratio_masked, 95)
-                h = hist.Hist(hist.axis.Regular(50, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / Gen $p_{T}$"))
-                h.fill(ptratio_masked)
-                hep.histplot(h, density=True, alpha=0.75, histtype='step', label=label, linewidth=2, ax=ax)
-                ax.axvline(median, color=median_colors[idx], linestyle='--', label=f'Median {label}: {median:.2f}', alpha=0.7)
-                ax.axvline(perc5, color=perc_colors[idx], linestyle='--', label=f'5% {label}: {perc5:.2f}', alpha=0.7)
-                ax.axvline(perc95, color=perc_colors[idx], linestyle='--', label=f'95% {label}: {perc95:.2f}', alpha=0.7)
+                if plots:
+                    h = hist.Hist(hist.axis.Regular(50, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / Gen $p_{T}$"))
+                    h.fill(ptratio_masked)
+                    hep.histplot(h, density=True, alpha=0.75, histtype='step', label=label, linewidth=2, ax=ax)
+                    ax.axvline(median, color=median_colors[idx], linestyle='--', label=f'Median {label}: {median:.2f}', alpha=0.7)
+                    ax.axvline(perc5, color=perc_colors[idx], linestyle='--', label=f'5% {label}: {perc5:.2f}', alpha=0.7)
+                    ax.axvline(perc95, color=perc_colors[idx], linestyle='--', label=f'95% {label}: {perc95:.2f}', alpha=0.7)
 
                 #![Last eta bin][label]
                 centers[-1][label] = np.append(centers[-1][label],((genpt_min + genpt_max) / 2))
                 medians[-1][label] = np.append(medians[-1][label],(median))
                 perc5s[-1][label] = np.append(perc5s[-1][label],(perc5))
                 perc95s[-1][label] = np.append(perc95s[-1][label],(perc95))
-
-            ax.legend(fontsize=15)
-            fig.savefig(f"{savefolder}/ptratio_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}_genpt_{str(genpt_min).replace('.','')}_{str(genpt_max).replace('.','')}.png")
-            fig.savefig(f"{savefolder}/ptratio_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}_genpt_{str(genpt_min).replace('.','')}_{str(genpt_max).replace('.','')}.pdf")
-            plt.close(fig)
+            if plots:
+                ax.legend(fontsize=15)
+                fig.savefig(f"{savefolder}/ptratio_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}_genpt_{str(genpt_min).replace('.','')}_{str(genpt_max).replace('.','')}.png")
+                fig.savefig(f"{savefolder}/ptratio_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}_genpt_{str(genpt_min).replace('.','')}_{str(genpt_max).replace('.','')}.pdf")
+                plt.close(fig)
     return eta_bins, centers, medians, perc5s, perc95s
 
 
