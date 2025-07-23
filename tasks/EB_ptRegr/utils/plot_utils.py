@@ -135,9 +135,9 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, per
             ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.2, medians[eta_idx][label],
                         yerr=[medians[eta_idx][label] - perc16s[eta_idx][label], perc84s[eta_idx][label] - medians[eta_idx][label]],
                         color=colors[idx], alpha=1, label=f"{label} 16/84%", linestyle='--', linewidth=4 )
+            ax[1].step(centers[eta_idx][label], residuals[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
         ax[0].legend(fontsize=15)
         ax[0].set_ylim(0.3,1.7)
-        ax[1].step(centers[eta_idx][label], residuals[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
         ax[1].set_xlabel("Gen $p_{T}$ [GeV]")
         ax[1].set_ylabel("Med[|L1 $p_{T}$-Gen $p_{T}$|]", fontsize=12)
         fig.savefig(f"{savefolder}/aresponse_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.pdf")
