@@ -118,3 +118,4 @@ ENV/
 **/temp*/*
 **/plots
 **/outputs
+**/plots*/*
