@@ -16,16 +16,16 @@ df = openAsDataframe("DoubleElectron_PU200.root", "TkEle")
 
 
 # %%
-eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals = plot_ptratio_distributions(
+eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(
                             df,
                             ptratio_dict,
                             genpt_,
                             eta_,
                             plots=True
                             )
-response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals)
-
-eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals = plot_ptratio_distributions(
+response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances)
+#%%
+eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(
                             df,
                             ptratio_dict,
                             genpt_,
@@ -33,7 +33,7 @@ eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals = plot_
                             eta_bins = np.array([0,1.479])
                             #plots=True
                             )
-response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals)
+response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances)
 
 
 # %%

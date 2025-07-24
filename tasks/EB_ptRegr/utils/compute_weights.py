@@ -23,16 +23,20 @@ def cut_and_compute_weights(df, genpt_, pt_, genpt_bins=None, ptcut=4):
     unbalance_h = unbalance_h/(genpt_h/genpt_h.integrate(0))
 
     mad_h = hist.Hist(hist.axis.Variable(genpt_bins))
+    var_h = hist.Hist(hist.axis.Variable(genpt_bins))
     for genpt_min, genpt_max in zip(genpt_bins[:-1], genpt_bins[1:]):
         center = (genpt_min + genpt_max) / 2
         mask = (df[genpt_] >= genpt_min) & (df[genpt_] < genpt_max)
         df_mask = df[mask]
         mad_h[hist.loc(center)] = 1/np.median(np.abs(df_mask[pt_]-df_mask[genpt_]))
+        var_h[hist.loc(center)] = 1/np.sum(((df_mask[pt_]-df_mask[genpt_])**2)/(len(df_mask) - 1))
 
+    df["VARw"]=np.array([var_h[hist.loc(v)] for v in df[genpt_].values])
     df["RESw"]=np.array([mad_h[hist.loc(v)] for v in df[genpt_].values])
     df["BALw"]=np.array([unbalance_h[hist.loc(v)] for v in df[genpt_].values])
     df["BALw"]= len(df)*df["BALw"]/df["BALw"].sum()
     df["wTot"]=df["RESw"]*df["BALw"]
+    df["w2Tot"]=df["VARw"]*df["BALw"]
     return df
 
 #%%

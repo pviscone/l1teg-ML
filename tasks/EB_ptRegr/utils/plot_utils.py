@@ -60,6 +60,7 @@ def plot_ptratio_distributions(df,
     perc84s = []
     perc95s = []
     residuals = []
+    variances = []
     eta = df[eta_].values
     ptratio_dict = {key: df[value].values for key, value in ptratio_dict.items()}
     genpt = df[genpt_].values
@@ -74,6 +75,7 @@ def plot_ptratio_distributions(df,
         perc84s.append({key:np.array([]) for key in ptratio_dict.keys()})
         perc95s.append({key:np.array([]) for key in ptratio_dict.keys()})
         residuals.append({key:np.array([]) for key in ptratio_dict.keys()})
+        variances.append({key:np.array([]) for key in ptratio_dict.keys()})
         for genpt_min, genpt_max in zip(genpt_bins[:-1], genpt_bins[1:]):
             if plots:
                 fig, ax = plt.subplots()
@@ -91,6 +93,7 @@ def plot_ptratio_distributions(df,
                 perc16 = np.percentile(ptratio_masked, 16)
                 perc84 = np.percentile(ptratio_masked, 84)
                 res = np.median(genpt_eta[mask_genpt]*np.abs(ptratio_masked - 1))
+                var = np.sum(((genpt_eta[mask_genpt]*np.abs(ptratio_masked - 1))**2)/(len(genpt_eta[mask_genpt]) - 1))
                 if plots:
                     h = hist.Hist(hist.axis.Regular(30, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / Gen $p_{T}$"))
                     h.fill(ptratio_masked)
@@ -107,20 +110,23 @@ def plot_ptratio_distributions(df,
                 perc16s[-1][label] = np.append(perc16s[-1][label],(perc16))
                 perc84s[-1][label] = np.append(perc84s[-1][label],(perc84))
                 residuals[-1][label] = np.append(residuals[-1][label],(res))
+                variances[-1][label] = np.append(variances[-1][label],(var))
             if plots:
                 ax.legend(fontsize=15)
                 fig.savefig(f"{savefolder}/ptratio_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}_genpt_{str(genpt_min).replace('.','')}_{str(genpt_max).replace('.','')}.png")
                 fig.savefig(f"{savefolder}/ptratio_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}_genpt_{str(genpt_min).replace('.','')}_{str(genpt_max).replace('.','')}.pdf")
                 plt.close(fig)
-    return eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals
+    return eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances
 
 
-def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, savefolder="plots"):
+def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder="plots"):
     os.makedirs(savefolder, exist_ok=True)
     colors = ["red", "blue"]
 
     for eta_idx, (eta_min, eta_max) in enumerate(zip(eta_bins[:-1], eta_bins[1:])):
-        fig, ax = plt.subplots(2,1, figsize=(10, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
+        fig, ax = plt.subplots(3,1, figsize=(8, 10), sharex=True, gridspec_kw={'height_ratios': [3, 1, 1], "hspace": 0.})
+        plt.setp(ax[0].get_xticklabels(), visible=False)
+        plt.setp(ax[1].get_xticklabels(), visible=False)
         ax[0].axhline(1, color='black', linestyle=':', alpha=0.3)
         ax[0].set_title(f"Eta: [{eta_min},{eta_max}]")
         #ax[0].set_xlabel("Gen $p_{T}$ [GeV]")
@@ -136,10 +142,12 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, per
                         yerr=[medians[eta_idx][label] - perc16s[eta_idx][label], perc84s[eta_idx][label] - medians[eta_idx][label]],
                         color=colors[idx], alpha=1, label=f"{label} 16/84%", linestyle='--', linewidth=4 )
             ax[1].step(centers[eta_idx][label], residuals[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
+            ax[2].step(centers[eta_idx][label], variances[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
         ax[0].legend(fontsize=15)
         ax[0].set_ylim(0.3,1.7)
-        ax[1].set_xlabel("Gen $p_{T}$ [GeV]")
-        ax[1].set_ylabel("Med[|L1 $p_{T}$-Gen $p_{T}$|]", fontsize=12)
+        ax[1].set_ylabel("Med[|L1 $p_{T}$-Gen $p_{T}$|]", fontsize=10)
+        ax[2].set_xlabel("Gen $p_{T}$ [GeV]")
+        ax[2].set_ylabel(r"$\sum \frac{\left( L1 p_{T}-Gen p_{T} \right)^2]}{N-1}$", fontsize=13)
         fig.savefig(f"{savefolder}/aresponse_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.pdf")
         fig.savefig(f"{savefolder}/aresponse_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.png")
         plt.close(fig)
