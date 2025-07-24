@@ -37,13 +37,14 @@ if not os.path.exists("DoubleElectron_PU200.root"):
 df = openAsDataframe("DoubleElectron_PU200.root", "TkEle")
 df = cut_and_compute_weights(df, genpt_, pt_)
 
+df["TkEle_in_caloEta"] = df["TkEle_caloEta"].abs()
 
 features = [
-    "TkEle_caloEta",
+    "TkEle_in_caloEta",
     #'TkEle_in_caloStaWP',
     #'TkEle_in_caloTkAbsDeta',
     'TkEle_in_caloTkAbsDphi',
-    #'TkEle_in_tkChi2RPhi',
+    'TkEle_in_tkChi2RPhi',
     #'TkEle_in_caloLooseTkWP',
     'TkEle_in_caloPt',
     'TkEle_in_caloRelIso',
@@ -51,7 +52,7 @@ features = [
     'TkEle_in_tkPtFrac',
     'TkEle_in_caloTkNMatch',
     'TkEle_in_caloTkPtRatio',
-    'TkEle_idScore',
+    #'TkEle_idScore',
 ]
 
 df_train, df_test, gen_train, gen_test, ptratio_train, ptratio_test, eta_train, eta_test, dfw_train, dfw_test = train_test_split(df[features], df["TkEle_Gen_pt"], df["TkEle_Gen_ptRatio"], df[eta_], df[["RESw", "BALw", "wTot","w2Tot"]], test_size=0.2, random_state=42)
