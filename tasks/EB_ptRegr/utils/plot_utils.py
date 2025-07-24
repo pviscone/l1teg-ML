@@ -7,7 +7,7 @@ import os
 
 hep.style.use("CMS")
 
-median_colors=["red", "orange", "yellow"]
+median_colors=["red", "blue", "yellow"]
 perc_colors=["green", "blue", "purple"]
 
 def plot_distributions(df, features = None, weight=None, savefolder="plots/distributions"):
@@ -79,7 +79,7 @@ def plot_ptratio_distributions(df,
         for genpt_min, genpt_max in zip(genpt_bins[:-1], genpt_bins[1:]):
             if plots:
                 fig, ax = plt.subplots()
-                ax.axvline(1, color='black', linestyle=':', alpha=0.3)
+                ax.axvline(1, color='black', alpha=0.3)
                 ax.set_title(f"Eta: [{eta_min},{eta_max}], GenPt: [{genpt_min},{genpt_max}]")
                 ax.set_xlabel("TkEle $p_{T}$ / Gen $p_{T}$")
                 ax.set_ylabel("Density")
@@ -97,10 +97,10 @@ def plot_ptratio_distributions(df,
                 if plots:
                     h = hist.Hist(hist.axis.Regular(30, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / Gen $p_{T}$"))
                     h.fill(ptratio_masked)
-                    hep.histplot(h, density=True, alpha=0.75, histtype='step', label=label, linewidth=2, ax=ax)
+                    hep.histplot(h, density=True, alpha=0.75, histtype='step', label=label, linewidth=2, color=median_colors[idx], ax=ax)
                     ax.axvline(median, color=median_colors[idx], linestyle='--', label=f'Median {label}: {median:.2f}', alpha=0.7)
-                    ax.axvline(perc5, color=perc_colors[idx], linestyle='--', label=f'5% {label}: {perc5:.2f}', alpha=0.7)
-                    ax.axvline(perc95, color=perc_colors[idx], linestyle='--', label=f'95% {label}: {perc95:.2f}', alpha=0.7)
+                    ax.axvline(perc5, color=median_colors[idx], linestyle=':', label=f'5% {label}: {perc5:.2f}', alpha=0.7)
+                    ax.axvline(perc95, color=median_colors[idx], linestyle=':', label=f'95% {label}: {perc95:.2f}', alpha=0.7)
 
                 #![Last eta bin][label]
                 centers[-1][label] = np.append(centers[-1][label],((genpt_min + genpt_max) / 2))
