@@ -32,7 +32,7 @@ else:
 os.makedirs(f"plots{metric}", exist_ok=True)
 
 if not os.path.exists("DoubleElectron_PU200.root"):
-    raise ValueError("xrdcp root://eosuser.cern.ch//eos/user/p/pviscone/www/L1T/l1teg/EB_ptRegr/step0_ntuple/DoubleEle_PU200/zsnap/era151Xv0pre4_TkElePtRegr_dev/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root .")
+    raise ValueError("xrdcp root://eosuser.cern.ch//eos/user/p/pviscone/www/L1T/l1teg/EB_ptRegr/step0_ntuple/DoubleEle_PU200/zsnap/era151Xv0pre4_TkElePtRegr_dev_withScaled/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root .")
 
 df = openAsDataframe("DoubleElectron_PU200.root", "TkEle")
 df = cut_and_compute_weights(df, genpt_, pt_)
