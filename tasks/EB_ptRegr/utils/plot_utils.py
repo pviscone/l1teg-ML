@@ -95,7 +95,7 @@ def plot_ptratio_distributions(df,
                 res = np.median(genpt_eta[mask_genpt]*np.abs(ptratio_masked - 1))
                 var = np.sum(((genpt_eta[mask_genpt]*np.abs(ptratio_masked - 1))**2)/(len(genpt_eta[mask_genpt]) - 1))
                 if plots:
-                    h = hist.Hist(hist.axis.Regular(30, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / Gen $p_{T}$"))
+                    h = hist.Hist(hist.axis.Regular(29, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / Gen $p_{T}$"))
                     h.fill(ptratio_masked)
                     hep.histplot(h, density=True, alpha=0.75, histtype='step', label=label, linewidth=2, color=median_colors[idx], ax=ax)
                     ax.axvline(median, color=median_colors[idx], linestyle='--', label=f'Median {label}: {median:.2f}', alpha=0.7)
@@ -145,6 +145,8 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, per
             ax[2].step(centers[eta_idx][label], variances[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
         ax[0].legend(fontsize=15)
         ax[0].set_ylim(0.3,1.7)
+        ax[1].set_ylim(0, 2.9)
+        ax[2].set_ylim(0, 90)
         ax[1].set_ylabel("Med[|L1 $p_{T}$-Gen $p_{T}$|]", fontsize=10)
         ax[2].set_xlabel("Gen $p_{T}$ [GeV]")
         ax[2].set_ylabel(r"$\sum \frac{\left( L1 p_{T}-Gen p_{T} \right)^2]}{N-1}$", fontsize=13)

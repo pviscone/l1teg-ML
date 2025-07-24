@@ -18,7 +18,16 @@ pt_ = f"{collection}_in_caloPt"
 ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio",
                 "Regressed": "TkEle_regressedPtRatio"}
 
+metric = "L1"
 
+if metric == "L1":
+    loss = "myloss(x, y, w) = w * abs(x - y)"
+    w = "wTot"
+elif metric == "L2":
+    loss = "myloss(x, y, w) = w * (x - y)^2"
+    w = "w2Tot"
+else:
+    raise ValueError("Unknown metric. Use 'L1' or 'L2'.")
 
 if not os.path.exists("DoubleElectron_PU200.root"):
     raise ValueError("xrdcp root://eosuser.cern.ch//eos/user/p/pviscone/www/L1T/l1teg/EB_ptRegr/step0_ntuple/DoubleEle_PU200/zsnap/era151Xv0pre4_TkElePtRegr_dev/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root .")
@@ -64,7 +73,7 @@ model = PySRRegressor(
                           #"sigm": lambda x: 1 / (1 + sp.exp(-x)),
                           #"step": lambda x: sp.Piecewise((1, x > 0), (0, True)),
                           },
-    elementwise_loss="myloss(x, y, w) = w * abs(x - y)",
+    elementwise_loss = loss,
     batching = True,
     batch_size = 8000,
     procs = 20,
@@ -89,7 +98,7 @@ model.fit(df_train,
           gen_train,
           X_units=units,
           y_units="kg",
-          weights=dfw_train["wTot"],
+          weights=dfw_train[w],
           )
 
 
