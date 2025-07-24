@@ -9,7 +9,7 @@ import hist
 
 def cut_and_compute_weights(df, genpt_, pt_, genpt_bins=None, ptcut=4):
     if genpt_bins is None:
-        genpt_bins = np.linspace(4, 100, 33)
+        genpt_bins = np.linspace(1, 100, 34)
     genpt_bins = genpt_bins[genpt_bins >= ptcut]
     df = df[df[genpt_] >= ptcut]
     df = df[df[genpt_] < 100]
