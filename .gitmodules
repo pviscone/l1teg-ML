@@ -5,3 +5,6 @@
 	path = cmgrdf-cli
 	url = git@github.com:pviscone/cmgrdf-cli.git
 	branch = dev_1_2_0
+[submodule "utils/BitHub"]
+	path = utils/BitHub
+	url = git@github.com:pviscone/BitHub.git

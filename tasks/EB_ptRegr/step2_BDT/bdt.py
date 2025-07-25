@@ -37,7 +37,7 @@ if not os.path.exists("DoubleElectron_PU200.root"):
 df = openAsDataframe("DoubleElectron_PU200.root", "TkEle")
 df = cut_and_compute_weights(df, genpt_, pt_)
 
-df["TkEle_in_caloEta"] = df["TkEle_caloEta"].abs()
+df["TkEle_in_caloEta"] = df["TkEle_caloEta"].abs()-1
 
 features = [
     "TkEle_in_caloEta",
@@ -123,4 +123,20 @@ def plot_results(model, plot_distributions=False):
 
 plot_results(model, plot_distributions=True)
 # %%
+dump_file = open(f"plots{metric}/logger.log", "w")
+model_df = model.get_booster().trees_to_dataframe()
 
+print("MAX\n", file=dump_file)
+print(model_df.groupby("Feature").max()["Split"], file=dump_file)
+
+print("\nMIN\n", file=dump_file)
+print(model_df.groupby("Feature").min()["Split"], file=dump_file)
+
+
+print("\n", file=dump_file)
+for i in range(len(features)):
+    print(f"f{i}: {features[i]}", file=dump_file)
+
+dump_file.close()
+
+# %%
