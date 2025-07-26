@@ -8,3 +8,7 @@
 [submodule "utils/BitHub"]
 	path = utils/BitHub
 	url = git@github.com:pviscone/BitHub.git
+[submodule "utils/conifer"]
+	path = utils/conifer
+	url = git@github.com:pviscone/conifer.git
+	branch = external_requirements

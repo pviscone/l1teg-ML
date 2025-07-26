@@ -7,8 +7,7 @@ import os
 
 hep.style.use("CMS")
 
-median_colors=["red", "blue", "yellow"]
-perc_colors=["green", "blue", "purple"]
+median_colors=["red", "blue", "darkgreen"]
 
 def plot_distributions(df, features = None, weight=None, savefolder="plots/distributions"):
     if features is None:
@@ -121,7 +120,7 @@ def plot_ptratio_distributions(df,
 
 def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder="plots"):
     os.makedirs(savefolder, exist_ok=True)
-    colors = ["red", "blue"]
+    colors = ["red", "blue", "darkgreen"]
 
     for eta_idx, (eta_min, eta_max) in enumerate(zip(eta_bins[:-1], eta_bins[1:])):
         fig, ax = plt.subplots(3,1, figsize=(8, 10), sharex=True, gridspec_kw={'height_ratios': [3, 1, 1], "hspace": 0.})
