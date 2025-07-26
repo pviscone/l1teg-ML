@@ -7,7 +7,7 @@ import os
 
 hep.style.use("CMS")
 
-median_colors=["red", "blue", "darkgreen"]
+colors=["red", "blue", "limegreen"]
 
 def plot_distributions(df, features = None, weight=None, savefolder="plots/distributions"):
     if features is None:
@@ -96,10 +96,10 @@ def plot_ptratio_distributions(df,
                 if plots:
                     h = hist.Hist(hist.axis.Regular(29, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / Gen $p_{T}$"))
                     h.fill(ptratio_masked)
-                    hep.histplot(h, density=True, alpha=0.75, histtype='step', label=label, linewidth=2, color=median_colors[idx], ax=ax)
-                    ax.axvline(median, color=median_colors[idx], linestyle='--', label=f'Median {label}: {median:.2f}', alpha=0.7)
-                    ax.axvline(perc5, color=median_colors[idx], linestyle=':', label=f'5% {label}: {perc5:.2f}', alpha=0.7)
-                    ax.axvline(perc95, color=median_colors[idx], linestyle=':', label=f'95% {label}: {perc95:.2f}', alpha=0.7)
+                    hep.histplot(h, density=True, alpha=0.75, histtype='step', label=label, linewidth=2, color=colors[idx], ax=ax)
+                    ax.axvline(median, color=colors[idx], linestyle='--', label=f'Median {label}: {median:.2f}', alpha=0.7)
+                    ax.axvline(perc5, color=colors[idx], linestyle=':', label=f'5% {label}: {perc5:.2f}', alpha=0.7)
+                    ax.axvline(perc95, color=colors[idx], linestyle=':', label=f'95% {label}: {perc95:.2f}', alpha=0.7)
 
                 #![Last eta bin][label]
                 centers[-1][label] = np.append(centers[-1][label],((genpt_min + genpt_max) / 2))
@@ -120,7 +120,6 @@ def plot_ptratio_distributions(df,
 
 def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder="plots"):
     os.makedirs(savefolder, exist_ok=True)
-    colors = ["red", "blue", "darkgreen"]
 
     for eta_idx, (eta_min, eta_max) in enumerate(zip(eta_bins[:-1], eta_bins[1:])):
         fig, ax = plt.subplots(3,1, figsize=(8, 10), sharex=True, gridspec_kw={'height_ratios': [3, 1, 1], "hspace": 0.})
@@ -133,11 +132,11 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, per
         for idx, label in enumerate(ptratio_dict.keys()):
             diff = centers[eta_idx][label][1:]-centers[eta_idx][label][:-1]
             diff = np.append(diff, diff[-1])
-            #ax[0].plot(centers[-1][label], medians[-1][label], marker='o', label=label, color=median_colors[idx])
-            ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.2, medians[eta_idx][label],
+            #ax[0].plot(centers[-1][label], medians[-1][label], marker='o', label=label, color=colors[idx])
+            ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.25, medians[eta_idx][label],
                         yerr=[medians[eta_idx][label] - perc5s[eta_idx][label], perc95s[eta_idx][label] - medians[eta_idx][label]],
                         color=colors[idx], alpha=0.5, label=f"{label} 5/95%", marker='o', linestyle='-')
-            ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.2, medians[eta_idx][label],
+            ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.25, medians[eta_idx][label],
                         yerr=[medians[eta_idx][label] - perc16s[eta_idx][label], perc84s[eta_idx][label] - medians[eta_idx][label]],
                         color=colors[idx], alpha=1, label=f"{label} 16/84%", linestyle='--', linewidth=4 )
             ax[1].step(centers[eta_idx][label], residuals[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)

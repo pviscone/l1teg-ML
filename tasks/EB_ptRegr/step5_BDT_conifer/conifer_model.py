@@ -18,7 +18,7 @@ cfg = conifer.backends.xilinxhls.auto_config(granularity="full")
 cfg["XilinxPart"] = "xcvu13p-flga2577-2-e"
 cfg['InputPrecision'] = "ap_fixed<10,1,AP_RND_CONV,AP_SAT>"
 cfg['ThresholdPrecision'] = "ap_fixed<10,1,AP_RND_CONV,AP_SAT>"
-cfg['ScorePrecision'] =  "ap_ufixed<12,3,AP_RND_CONV,AP_SAT>"
+cfg['ScorePrecision'] =  "ap_fixed<10,2,AP_RND_CONV,AP_SAT>"
 cfg['ClockPeriod'] = 4.16666666
 
 
@@ -83,7 +83,7 @@ df["caloTkPtRatio"] = np.clip(-1 + df["TkEle_in_caloTkPtRatio"]/2**3, -1, 1)
 
 
 df[features] = pd.DataFrame(
-    mp_xilinx.mp_xilinx(df[features], 'ap_fixed<{10, 1, "AP_RND_CONV", "AP_SAT">', convert="double")
+    mp_xilinx.mp_xilinx(df[features], 'ap_fixed<10, 1, "AP_RND_CONV", "AP_SAT">', convert="double")
 )
 
 #%%
