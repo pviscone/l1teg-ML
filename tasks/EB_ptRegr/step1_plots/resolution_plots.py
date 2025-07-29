@@ -9,11 +9,16 @@ from compute_weights import cut_and_compute_weights
 collection = "TkEle"
 eta_ = f"{collection}_caloEta"
 genpt_ = f"{collection}_Gen_pt"
-pt_ = "TkEle_in_caloPt"
+pt_ = "TkEle_pt"
+
+#For CMSSW
+#ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio", "Regressed": "TkEle_Gen_ptCorrRatio"}
 ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio"}
 
-df = openAsDataframe("DoubleElectron_PU200.root", "TkEle")
+df = openAsDataframe("../step0_ntuple/tempPU200Test/zsnap/era151X_ptRegr_v0/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root", "TkEle")
 
+#ForCMSSW
+#df["TkEle_Gen_ptCorrRatio"] = df["TkEle_ptCorr"].values/df[genpt_].values
 
 # %%
 eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(
@@ -34,11 +39,11 @@ eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, varian
                             #plots=True
                             )
 response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances)
-
+sys.exit(0)
 
 # %%
 
-df = cut_and_compute_weights(df, genpt_, pt_)
+df = cut_and_compute_weights(df, genpt_, pt_, ptcut=1)
 features = [
     'RESw',
     'BALw',
