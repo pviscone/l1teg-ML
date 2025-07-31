@@ -22,6 +22,7 @@ ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio",
 
 metric = "L1"
 quant = 10
+q_out = (12,3)
 
 if metric == "L1":
     loss = "reg:absoluteerror"
@@ -49,7 +50,7 @@ features = [
     'caloTkAbsDphi',
     'hwTkChi2RPhi',
     'caloPt',
-    'caloRelIso',
+    #'caloRelIso',
     'caloSS',
     'tkPtFrac',
     'caloTkNMatch',
@@ -71,30 +72,35 @@ df[features] = pd.DataFrame(
     mp_xilinx.mp_xilinx(df[features], f'ap_fixed<{quant}, 1, "AP_RND_CONV", "AP_SAT">', convert="double")
 )
 
-df = cut_and_compute_weights(df, genpt_, pt_, ptcut = 1)
+df = cut_and_compute_weights(df, genpt_, pt_, ptcut = 0)
 #%%
 df_train, df_test, gen_train, gen_test, ptratio_train, ptratio_test, eta_train, eta_test, pt_train, pt_test, dfw_train, dfw_test = train_test_split(df[features], df["TkEle_Gen_pt"], df["TkEle_Gen_ptRatio"], df[eta_], df[pt_], df[["RESw", "BALw", "wTot","w2Tot"]], test_size=0.2, random_state=42)
 
-# %%
 
+
+
+pt_ratio_q_train = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(gen_train.values/pt_train.values), "double")
+pt_ratio_q_test = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(gen_test.values/pt_test.values), "double")
+# %%
 model = xgboost.XGBRegressor(
     objective=loss,
-    max_depth=7,
-    learning_rate=0.7,
+    max_depth=6,
+    learning_rate=0.75,
     subsample=1.,
     colsample_bytree=1.0,
     alpha=0.,
     lambd=0.00,
-    min_split_loss=5,
-    min_child_weight=120,
-    n_estimators=15,
+    min_split_loss=6,
+    min_child_weight=200,
+    n_estimators=12,
     eval_metric=eval_metric,
+
 )
-eval_set = [(df_train.values, gen_train.values/pt_train.values), (df_test[features].values, gen_test.values/pt_test.values)]
+eval_set = [(df_train, pt_ratio_q_train), (df_test[features], pt_ratio_q_test)]
 eval_result = {}
 model.fit(
-    df_train.values,
-    gen_train.values/pt_train.values,
+    df_train,
+    pt_ratio_q_train,
     sample_weight=dfw_train[w].values,
     eval_set=eval_set,
 )
@@ -110,9 +116,9 @@ plt.title(f'Training and Validation {eval_metric}')
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-os.makedirs(f"plots_q{quant}", exist_ok=True)
-plt.savefig(f"plots_q{quant}/loss_curve.png")
-plt.savefig(f"plots_q{quant}/loss_curve.pdf")
+os.makedirs(f"plots/plots_q{quant}", exist_ok=True)
+plt.savefig(f"plots/plots_q{quant}/loss_curve.png")
+plt.savefig(f"plots/plots_q{quant}/loss_curve.pdf")
 plt.show()
 
 # Plot feature importance
@@ -122,33 +128,30 @@ plt.barh(features, importances)
 plt.xlabel("Feature Importance")
 plt.title("XGBoost Feature Importances")
 plt.tight_layout()
-plt.savefig(f"plots_q{quant}/feature_importance.png")
-plt.savefig(f"plots_q{quant}/feature_importance.pdf")
+plt.savefig(f"plots/plots_q{quant}/feature_importance.png")
+plt.savefig(f"plots/plots_q{quant}/feature_importance.pdf")
 plt.show()
 
 #%%
 from plot_utils import plot_ptratio_distributions, response_plot  # noqa: E402
 #evaluate on test set
-def plot_results(model, plot_distributions=False, clip = 4, q_out=4):
+def plot_results(model, plot_distributions=False, q_out=(11,2)):
     global ptratio_test, ptratio_dict, gen_test, genpt_, eta_test, eta_, pt_
     df_test[ptratio_dict["NoRegression"]] = ptratio_test
     df_test[genpt_] = gen_test
     df_test[eta_] = eta_test
     df_test[pt_] = pt_test
-    df_test["model_output"] = np.clip(model.predict(df_test[features].values),0, clip)
-    n_int_bits = int(np.ceil(np.log2(clip)))
-    assert q_out > n_int_bits, f"q_out ({q_out}) must be greater than n_int_bits ({n_int_bits})"
+    df_test["model_output"] = model.predict(df_test[features])
 
-    df_test["model_output_quantized"] = xilinx.convert(xilinx.ap_ufixed(q_out, n_int_bits, q_mode = "AP_RND_CONV")(df_test["model_output"].values), "double")
+    df_test["model_output_quantized"] = xilinx.convert(xilinx.ap_ufixed(q_out[0], q_out[1], q_mode = "AP_RND_CONV")(df_test["model_output"].values), "double")
 
     df_test[ptratio_dict["Regressed"]] = df_test["model_output_quantized"].values*df_test[pt_].values/df_test[genpt_].values
 
-    os.makedirs(f"plots/plots{metric}_q{quant}_out{q_out}_clip{clip}", exist_ok=True)
+    os.makedirs(f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}", exist_ok=True)
 
 
-    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(df_test,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(1,100,34), plots=plot_distributions, savefolder=f"plots/plots{metric}_q{quant}_out{q_out}_clip{clip}")
-    response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder=f"plots/plots{metric}_q{quant}_out{q_out}_clip{clip}")
+    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(df_test,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(1,100,34), plots=plot_distributions, savefolder=f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}")
+    response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder=f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}")
 
-for clip in [4]:
-    for q_out in [9]:
-        plot_results(model, q_out=q_out, clip=clip, plot_distributions=False)
+plot_results(model, q_out=q_out, plot_distributions=True)
+# %%

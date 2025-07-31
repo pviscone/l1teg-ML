@@ -19,7 +19,7 @@ cfg = conifer.backends.xilinxhls.auto_config(granularity="full")
 cfg["XilinxPart"] = "xcvu13p-flga2577-2-e"
 cfg['InputPrecision'] = "ap_fixed<10,1,AP_RND_CONV,AP_SAT>"
 cfg['ThresholdPrecision'] = "ap_fixed<10,1,AP_RND_CONV,AP_SAT>"
-cfg['ScorePrecision'] =  "ap_fixed<10,2,AP_RND_CONV,AP_SAT>"
+cfg['ScorePrecision'] =  "ap_fixed<12,3,AP_RND_CONV,AP_SAT>"
 cfg['ClockPeriod'] = 4.16666666
 
 
@@ -64,7 +64,7 @@ features = [
     'caloTkAbsDphi',
     'hwTkChi2RPhi',
     'caloPt',
-    'caloRelIso',
+    #'caloRelIso',
     'caloSS',
     'tkPtFrac',
     'caloTkNMatch',

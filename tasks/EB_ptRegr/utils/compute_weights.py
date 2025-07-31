@@ -12,7 +12,7 @@ def cut_and_compute_weights(df, genpt_, pt_, genpt_bins=None, ptcut=4):
         genpt_bins = np.linspace(1, 100, 34)
     genpt_bins = genpt_bins[genpt_bins >= ptcut]
     df = df[df[genpt_] >= ptcut]
-    df = df[df[genpt_] < 100]
+    #df = df[df[genpt_] < 100]
 
 
     fine_bins = np.linspace(genpt_bins[0], genpt_bins[-1], 200)

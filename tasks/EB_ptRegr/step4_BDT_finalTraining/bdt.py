@@ -10,7 +10,7 @@ from file_utils import openAsDataframe
 from compute_weights import cut_and_compute_weights
 import xgboost
 import pandas as pd
-from bithub.quantizers import mp_xilinx
+from bithub.quantizers import mp_xilinx, xilinx
 
 out_folder = "out"
 collection = "TkEle"
@@ -22,6 +22,7 @@ ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio",
 
 metric = "L1"
 quant = 10
+q_out = (12, 3)
 
 if metric == "L1":
     loss = "reg:absoluteerror"
@@ -51,7 +52,7 @@ features = [
     'caloTkAbsDphi',
     'hwTkChi2RPhi',
     'caloPt',
-    'caloRelIso',
+    #'caloRelIso',
     'caloSS',
     'tkPtFrac',
     'caloTkNMatch',
@@ -73,7 +74,9 @@ df[features] = pd.DataFrame(
     mp_xilinx.mp_xilinx(df[features], f'ap_fixed<{quant}, 1, "AP_RND_CONV", "AP_SAT">', convert="double")
 )
 
-df = cut_and_compute_weights(df, genpt_, pt_, ptcut = 1)
+
+
+df = cut_and_compute_weights(df, genpt_, pt_, ptcut = 0)
 #%%
 df_train = df[features]
 gen_train = df["TkEle_Gen_pt"]
@@ -82,26 +85,28 @@ eta_train = df[eta_]
 pt_train = df[pt_]
 dfw_train = df[["RESw", "BALw", "wTot","w2Tot"]]
 
+pt_ratio_q = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(gen_train.values/pt_train.values), "double")
+
 # %%
 
 model = xgboost.XGBRegressor(
     objective=loss,
-    max_depth=7,
-    learning_rate=0.7,
+    max_depth=6,
+    learning_rate=0.75,
     subsample=1.,
     colsample_bytree=1.0,
     alpha=0.,
     lambd=0.00,
-    min_split_loss=5,
-    min_child_weight=120,
-    n_estimators=15,
+    min_split_loss=6,
+    min_child_weight=275,
+    n_estimators=12,
     eval_metric=eval_metric,
 )
-eval_set = [(df_train.values, gen_train.values/pt_train.values)]
+eval_set = [(df_train, pt_ratio_q)]
 eval_result = {}
 model.fit(
-    df_train.values,
-    gen_train.values/pt_train.values,
+    df_train,
+    pt_ratio_q,
     sample_weight=dfw_train[w].values,
     eval_set=eval_set,
 )
