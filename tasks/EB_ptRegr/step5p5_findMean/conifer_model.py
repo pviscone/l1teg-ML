@@ -70,8 +70,8 @@ features = [
     "caloPt",
     #"caloRelIso",
     "caloSS",
-    "tkPtFrac",
-    "caloTkNMatch",
+    #"tkPtFrac",
+    #"caloTkNMatch",
     "caloTkPtRatio",
 ]
 
@@ -115,3 +115,6 @@ print(f"Mean diff: {np.mean(diff)}")
 
 
 # %%
+import matplotlib.pyplot as plt
+plt.hist(diff,bins=100)
+plt.axvline(517*2**-9)

@@ -52,8 +52,8 @@ features = [
     'caloPt',
     #'caloRelIso',
     'caloSS',
-    'tkPtFrac',
-    'caloTkNMatch',
+    #'tkPtFrac',
+    #'caloTkNMatch',
     'caloTkPtRatio',
 ]
 
@@ -76,22 +76,30 @@ df = cut_and_compute_weights(df, genpt_, pt_, ptcut = 0)
 #%%
 df_train, df_test, gen_train, gen_test, ptratio_train, ptratio_test, eta_train, eta_test, pt_train, pt_test, dfw_train, dfw_test = train_test_split(df[features], df["TkEle_Gen_pt"], df["TkEle_Gen_ptRatio"], df[eta_], df[pt_], df[["RESw", "BALw", "wTot","w2Tot"]], test_size=0.2, random_state=42)
 
-
-
-
 pt_ratio_q_train = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(gen_train.values/pt_train.values), "double")
 pt_ratio_q_test = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(gen_test.values/pt_test.values), "double")
+
+#train_mask = (pt_ratio_q_train < 2.- 1./2**(q_out[0]-q_out[1])) & (pt_ratio_q_train > 0.5)
+train_mask = (pt_ratio_q_train < 4.- 1./2**(q_out[0]-q_out[1]))
+df_train = df_train[train_mask]
+gen_train = gen_train[train_mask]
+pt_ratio_q_train = pt_ratio_q_train[train_mask]
+eta_train = eta_train[train_mask]
+pt_train = pt_train[train_mask]
+dfw_train = dfw_train[train_mask]
+ptratio_train = ptratio_train[train_mask]
+
 # %%
 model = xgboost.XGBRegressor(
     objective=loss,
     max_depth=6,
-    learning_rate=0.75,
+    learning_rate=0.7,
     subsample=1.,
     colsample_bytree=1.0,
     alpha=0.,
     lambd=0.00,
-    min_split_loss=6,
-    min_child_weight=200,
+    min_split_loss=5,
+    min_child_weight=100,
     n_estimators=12,
     eval_metric=eval_metric,
 

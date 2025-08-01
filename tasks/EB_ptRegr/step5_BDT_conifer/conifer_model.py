@@ -66,8 +66,8 @@ features = [
     'caloPt',
     #'caloRelIso',
     'caloSS',
-    'tkPtFrac',
-    'caloTkNMatch',
+    #'tkPtFrac',
+    #'caloTkNMatch',
     'caloTkPtRatio',
 ]
 

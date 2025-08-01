@@ -54,8 +54,8 @@ features = [
     'caloPt',
     #'caloRelIso',
     'caloSS',
-    'tkPtFrac',
-    'caloTkNMatch',
+    #'tkPtFrac',
+    #'caloTkNMatch',
     'caloTkPtRatio',
 ]
 
@@ -87,18 +87,29 @@ dfw_train = df[["RESw", "BALw", "wTot","w2Tot"]]
 
 pt_ratio_q = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(gen_train.values/pt_train.values), "double")
 
+#train_mask = (pt_ratio_q_train < 2.- 1./2**(q_out[0]-q_out[1])) & (pt_ratio_q_train > 0.5)
+train_mask = (pt_ratio_q < 4.- 1./2**(q_out[0]-q_out[1]))
+df_train = df_train[train_mask]
+gen_train = gen_train[train_mask]
+pt_ratio_q = pt_ratio_q[train_mask]
+eta_train = eta_train[train_mask]
+pt_train = pt_train[train_mask]
+dfw_train = dfw_train[train_mask]
+ptratio_train = ptratio_train[train_mask]
+
+
 # %%
 
 model = xgboost.XGBRegressor(
     objective=loss,
     max_depth=6,
-    learning_rate=0.75,
+    learning_rate=0.7,
     subsample=1.,
     colsample_bytree=1.0,
     alpha=0.,
     lambd=0.00,
-    min_split_loss=6,
-    min_child_weight=275,
+    min_split_loss=5,
+    min_child_weight=150,
     n_estimators=12,
     eval_metric=eval_metric,
 )

@@ -6,7 +6,9 @@ from CMGRDF.collectionUtils import DefineSkimmedCollection, DefineP4, DefineFrom
 def flow():
     tree = Tree()
     tree.add("noRegress", [DefineSkimmedCollection("GenEl", mask="GenEl_prompt==2"),
-                      Cut("nGenElBarrel==2", "Sum(abs(GenEl_caloeta)<1.479)==2", samplePattern="(?!MinBias).*")])
+                      DefineSkimmedCollection("TkEleL2", mask="TkEleL2_pt>4"),
+                      Cut("nGenElBarrel==2", "Sum(abs(GenEl_caloeta)<1.479)==2", samplePattern="(?!MinBias).*"),
+                      Define("TkEleL2_originalPt", "TkEleL2_pt")])
 
     tree.add("regressed", [
         ReDefine("TkEleL2_pt", "TkEleL2_ptCorr")
@@ -39,13 +41,21 @@ def flow():
         Cut(">=1 DPCandidate (dz<0.65)", "nDPCandidates>0", plot="dZCut"),
 
         #!------------------ Gen Matching ------------------!#
-        DefineSkimmedCollection("DPCandidates", mask=f"""
+        DefineSkimmedCollection("DPCandidates", mask="""
                 (match_mask(DPCandidates_l1_caloEta, DPCandidates_l1_caloPhi, GenEl_caloeta[0], GenEl_calophi[0]) &&
                 match_mask(DPCandidates_l2_caloEta, DPCandidates_l2_caloPhi, GenEl_caloeta[1], GenEl_calophi[1])) ||
                 (match_mask(DPCandidates_l1_caloEta, DPCandidates_l1_caloPhi, GenEl_caloeta[1], GenEl_calophi[1]) &&
                 match_mask(DPCandidates_l2_caloEta, DPCandidates_l2_caloPhi, GenEl_caloeta[0], GenEl_calophi[0]))
         """),
         Cut(">=1 DPCandidate (matched to GenEl)", "nDPCandidates>0", plot="matchingGenCut"),
+        DefineSkimmedCollection("DPCandidates", mask="DPCandidates_dR>0.6"),
+        Cut("DPCand_dR06","nDPCandidates>0", plot="separation"),
+        DefineSkimmedCollection("DPCandidates", mask="""
+            (DPCandidates_l1_ptCorr/DPCandidates_l1_originalPt)<2. && (DPCandidates_l2_ptCorr/DPCandidates_l2_originalPt)<2.
+            && (DPCandidates_l1_ptCorr/DPCandidates_l1_originalPt)>0.5 && (DPCandidates_l2_ptCorr/DPCandidates_l2_originalPt)>0.5
+        """),
+        Cut("ptCorr_trim","nDPCandidates>0", plot="trimRatio"),
+
 
 
         #Define("_argmaxdphi", "ArgMax(DPCandidates_dphi)"),
