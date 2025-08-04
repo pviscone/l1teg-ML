@@ -7,7 +7,18 @@ import os
 
 hep.style.use("CMS")
 
-colors=["red", "blue", "limegreen"]
+colors=[
+    "#3f90da",
+    "#ffa90e",
+    "#bd1f01",
+    "#94a4a2",
+    "#832db6",
+    "#a96b59",
+    "#e76300",
+    "#b9ac70",
+    "#92dadd",
+    "#717581",
+]
 
 def plot_distributions(df, features = None, weight=None, savefolder="plots/distributions"):
     if features is None:
@@ -79,7 +90,7 @@ def plot_ptratio_distributions(df,
             if plots:
                 fig, ax = plt.subplots()
                 ax.axvline(1, color='black', alpha=0.3)
-                ax.set_title(f"Eta: [{eta_min},{eta_max}], GenPt: [{genpt_min},{genpt_max}]")
+                ax.set_title(f"$| \eta |$: [{eta_min},{eta_max}], GenPt: [{genpt_min},{genpt_max}]")
                 ax.set_xlabel("TkEle $p_{T}$ / Gen $p_{T}$")
                 ax.set_ylabel("Density")
             for idx, (label, ptratio) in enumerate(ptratio_dict.items()):
@@ -118,15 +129,20 @@ def plot_ptratio_distributions(df,
     return eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances
 
 
-def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder="plots"):
+def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, verbose=True, savefolder="plots"):
     os.makedirs(savefolder, exist_ok=True)
 
     for eta_idx, (eta_min, eta_max) in enumerate(zip(eta_bins[:-1], eta_bins[1:])):
-        fig, ax = plt.subplots(3,1, figsize=(8, 10), sharex=True, gridspec_kw={'height_ratios': [3, 1, 1], "hspace": 0.})
-        plt.setp(ax[0].get_xticklabels(), visible=False)
-        plt.setp(ax[1].get_xticklabels(), visible=False)
+        if verbose:
+            fig, ax = plt.subplots(3,1, figsize=(8, 10), sharex=True, gridspec_kw={'height_ratios': [3, 1, 1], "hspace": 0.})
+        else:
+            fig, ax = plt.subplots()
+            ax=[ax]
+        if verbose:
+            plt.setp(ax[0].get_xticklabels(), visible=False)
+            plt.setp(ax[1].get_xticklabels(), visible=False)
         ax[0].axhline(1, color='black', linestyle=':', alpha=0.3)
-        ax[0].set_title(f"Eta: [{eta_min},{eta_max}]")
+        ax[0].set_title(f"$| \eta |$: [{eta_min},{eta_max}]")
         #ax[0].set_xlabel("Gen $p_{T}$ [GeV]")
         ax[0].set_ylabel("Median TkEle $p_{T}$ / Gen $p_{T}$")
         for idx, label in enumerate(ptratio_dict.keys()):
@@ -135,19 +151,48 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, per
             #ax[0].plot(centers[-1][label], medians[-1][label], marker='o', label=label, color=colors[idx])
             ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.25, medians[eta_idx][label],
                         yerr=[medians[eta_idx][label] - perc5s[eta_idx][label], perc95s[eta_idx][label] - medians[eta_idx][label]],
-                        color=colors[idx], alpha=0.5, label=f"{label} 5/95%", marker='o', linestyle='-')
+                        color=colors[idx], alpha=0.5, label=f"{label} 5/95%", linestyle='-')
             ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.25, medians[eta_idx][label],
                         yerr=[medians[eta_idx][label] - perc16s[eta_idx][label], perc84s[eta_idx][label] - medians[eta_idx][label]],
-                        color=colors[idx], alpha=1, label=f"{label} 16/84%", linestyle='--', linewidth=4 )
-            ax[1].step(centers[eta_idx][label], residuals[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
-            ax[2].step(centers[eta_idx][label], variances[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
-        ax[0].legend(fontsize=15)
+                        color=colors[idx], alpha=1, label=f"{label} 16/84%", linestyle='-', linewidth=4, markeredgecolor='black', markeredgewidth=1, markersize=5, marker='o')
+            if verbose:
+                ax[1].step(centers[eta_idx][label], residuals[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
+                ax[2].step(centers[eta_idx][label], variances[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
+        ax[0].legend(fontsize=18, loc='lower right')
         ax[0].set_ylim(0.3,1.7)
-        ax[1].set_ylim(0, 2.9)
-        ax[2].set_ylim(0, 90)
-        ax[1].set_ylabel("Med[|L1 $p_{T}$-Gen $p_{T}$|]", fontsize=10)
-        ax[2].set_xlabel("Gen $p_{T}$ [GeV]")
-        ax[2].set_ylabel(r"$\sum \frac{\left( L1 p_{T}-Gen p_{T} \right)^2]}{N-1}$", fontsize=13)
+        if verbose:
+            ax[1].set_ylim(0, 2.9)
+            ax[2].set_ylim(0, 90)
+            ax[1].set_ylabel("Med[|L1 $p_{T}$-Gen $p_{T}$|]", fontsize=10)
+            ax[2].set_xlabel("Gen $p_{T}$ [GeV]")
+            ax[2].set_ylabel(r"$\sum \frac{\left( L1 p_{T}-Gen p_{T} \right)^2]}{N-1}$", fontsize=13)
+        else:
+            ax[0].set_xlabel("Gen $p_{T}$ [GeV]")
+        hep.cms.text("Phase-2 Simulation Preliminary", ax=ax[0], loc=2)
+        hep.cms.lumitext("PU 200", ax=ax[0])
         fig.savefig(f"{savefolder}/aresponse_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.pdf")
         fig.savefig(f"{savefolder}/aresponse_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.png")
+        plt.close(fig)
+
+
+def resolution_plot(ptratio_dict, eta_bins, centers, perc16s, perc84s, savefolder="plots"):
+    os.makedirs(savefolder, exist_ok=True)
+
+    for eta_idx, (eta_min, eta_max) in enumerate(zip(eta_bins[:-1], eta_bins[1:])):
+        fig, ax = plt.subplots()
+        ax.axhline(0, color='black', linestyle=':', alpha=0.3)
+        ax.set_title(f"$| \eta |$: [{eta_min},{eta_max}]")
+        ax.set_xlabel("Gen $p_{T}$ [GeV]")
+        ax.set_ylabel("$\sigma_{eff}$(TkEle $p_{T}$ / Gen $p_{T}$)")
+        for idx, label in enumerate(ptratio_dict.keys()):
+            width = (perc84s[eta_idx][label] - perc16s[eta_idx][label]) / centers[eta_idx][label]
+            diff=(centers[eta_idx][label][1:]-centers[eta_idx][label][:-1])/2
+            ax.errorbar(centers[eta_idx][label][:-1], width[:-1], xerr=diff, marker='o', label=label, color=colors[idx], markeredgecolor='black', markeredgewidth=1, markersize=5, ls="none")
+        ax.legend()
+        ax.set_ylim(1e-4, 1)
+        ax.set_yscale("log")
+        hep.cms.text("Phase-2 Simulation Preliminary", ax=ax, loc=2)
+        hep.cms.lumitext("PU 200", ax=ax)
+        fig.savefig(f"{savefolder}/resolution_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.pdf")
+        fig.savefig(f"{savefolder}/resolution_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.png")
         plt.close(fig)

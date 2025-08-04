@@ -3,7 +3,7 @@ import sys
 import numpy as np
 sys.path.append("../utils")
 from file_utils import openAsDataframe
-from plot_utils import plot_ptratio_distributions, response_plot, plot_distributions
+from plot_utils import plot_ptratio_distributions, response_plot, plot_distributions, resolution_plot
 from compute_weights import cut_and_compute_weights
 
 collection = "TkEle"
@@ -12,13 +12,13 @@ genpt_ = f"{collection}_Gen_pt"
 pt_ = "TkEle_pt"
 
 #For CMSSW
-#ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio", "Regressed": "TkEle_Gen_ptCorrRatio"}
-ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio"}
+ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio", "Regressed": "TkEle_Gen_ptCorrRatio"}
+#ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio"}
 
 df = openAsDataframe("../step0_ntuple/tempPU200Test/zsnap/era151X_ptRegr_v0/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root", "TkEle")
 
 #ForCMSSW
-#df["TkEle_Gen_ptCorrRatio"] = df["TkEle_ptCorr"].values/df[genpt_].values
+df["TkEle_Gen_ptCorrRatio"] = df["TkEle_ptCorr"].values/df[genpt_].values
 
 # %%
 eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(
@@ -26,9 +26,10 @@ eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, varian
                             ptratio_dict,
                             genpt_,
                             eta_,
-                            plots=True
+                            plots=False,
                             )
-response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances)
+response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, verbose=False)
+resolution_plot(ptratio_dict, eta_bins, centers, perc16s, perc84s)
 #%%
 eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(
                             df,
@@ -36,10 +37,10 @@ eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, varian
                             genpt_,
                             eta_,
                             eta_bins = np.array([0,1.479])
-                            #plots=True
+                            #plots=True,
                             )
-response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances)
-sys.exit(0)
+response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, verbose=False)
+resolution_plot(ptratio_dict, eta_bins, centers, perc16s, perc84s)
 
 # %%
 
