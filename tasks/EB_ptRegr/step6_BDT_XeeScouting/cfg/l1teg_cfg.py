@@ -16,5 +16,5 @@ def add_tag(tags):
         era_paths_MC[tag] = base_tuple
         lumi[tag] = 400
 
-add_tag(["151X_ptRegr_v0_A1"])
+add_tag(["151X_ptRegr_v0_A2"])
 

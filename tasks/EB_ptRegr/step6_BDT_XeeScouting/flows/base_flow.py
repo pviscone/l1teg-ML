@@ -5,8 +5,8 @@ from CMGRDF.collectionUtils import DefineSkimmedCollection, DefineP4, DefineFrom
 
 def flow():
     tree = Tree()
-    tree.add("noRegress", [DefineSkimmedCollection("GenEl", mask="GenEl_prompt==2"),
-                      DefineSkimmedCollection("TkEleL2", mask="TkEleL2_pt>4"),
+    tree.add("noRegress", [
+                      DefineSkimmedCollection("GenEl", mask="GenEl_prompt==2"),
                       Cut("nGenElBarrel==2", "Sum(abs(GenEl_caloeta)<1.479)==2", samplePattern="(?!MinBias).*"),
                       Define("TkEleL2_originalPt", "TkEleL2_pt")])
 
@@ -21,21 +21,21 @@ def flow():
         DefineSkimmedCollection("TkEleL2", mask="abs(TkEleL2_caloEta)<1.479"),
         Define("TkEleMask", "TkEleL2_idScore>-0.3 && TkEleL2_pt>4", plot="noSelection"),
         DefineSkimmedCollection("TkEleL2", mask="TkEleMask"),
-        Cut("2tkEle","nTkEleL2>=2", plot="2tkEle_pt3_score-0.3"),
+        Cut("2tkEle","nTkEleL2>=2", plot="2tkEle_pt3_score_m0p3"),
 
         #!------------------ OS ------------------!#
         Define("DPCandidatesIdxs", "makeDPCandidateOSIdx(TkEleL2_charge)"),
         Cut("1OS pair", "DPCandidatesIdxs.first.size()>0"),
         DefineSkimmedCollection("DPCandidates_l1", "TkEleL2", indices="DPCandidatesIdxs.first"),
         DefineSkimmedCollection("DPCandidates_l2", "TkEleL2", indices="DPCandidatesIdxs.second"),
-        Define("DPCandidates_l1_p4", "makeP4(DPCandidates_l1_pt, DPCandidates_l1_caloEta, DPCandidates_l1_caloPhi, 0.0005)"),
-        Define("DPCandidates_l2_p4", "makeP4(DPCandidates_l2_pt, DPCandidates_l2_caloEta, DPCandidates_l2_caloPhi, 0.0005)"),
+        Define("DPCandidates_l1_p4", "makeP4(DPCandidates_l1_pt, DPCandidates_l1_eta, DPCandidates_l1_phi, 0.0005)"),
+        Define("DPCandidates_l2_p4", "makeP4(DPCandidates_l2_pt, DPCandidates_l2_eta, DPCandidates_l2_phi, 0.0005)"),
         Define("DPCandidates_p4", "DPCandidates_l1_p4+DPCandidates_l2_p4"),
         Define("DPCandidates_mass", "getMasses(DPCandidates_p4)"),
         Define("DPCandidates_pt", "getPts(DPCandidates_p4)"),
         Define("DPCandidates_dz", "abs(DPCandidates_l1_vz-DPCandidates_l2_vz)"),
-        Define("DPCandidates_dphi", "ROOT::VecOps::DeltaPhi(DPCandidates_l1_caloPhi, DPCandidates_l2_caloPhi)"),
-        Define("DPCandidates_deta", "abs(DPCandidates_l1_caloEta-DPCandidates_l2_caloEta)"),
+        Define("DPCandidates_dphi", "abs(ROOT::VecOps::DeltaPhi(DPCandidates_l1_phi, DPCandidates_l2_phi))"),
+        Define("DPCandidates_deta", "abs(DPCandidates_l1_eta-DPCandidates_l2_eta)"),
         Define("DPCandidates_dR", "ROOT::VecOps::sqrt(DPCandidates_deta*DPCandidates_deta+DPCandidates_dphi*DPCandidates_dphi)", plot="OSPair"),
         DefineSkimmedCollection("DPCandidates", mask="DPCandidates_dz<0.65"),
         Cut(">=1 DPCandidate (dz<0.65)", "nDPCandidates>0", plot="dZCut"),
