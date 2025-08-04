@@ -122,3 +122,5 @@ ENV/
 **/plotDir
 **/out/
 *.json
+*.pdf
+*.png
