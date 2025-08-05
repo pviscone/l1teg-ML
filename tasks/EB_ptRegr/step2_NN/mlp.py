@@ -35,35 +35,44 @@ if not os.path.exists("DoubleElectron_PU200.root"):
     raise ValueError("xrdcp root://eosuser.cern.ch//eos/user/p/pviscone/www/L1T/l1teg/EB_ptRegr/step0_ntuple/DoubleEle_PU200/zsnap/era151Xv0pre4_TkElePtRegr_dev_withScaled/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root .")
 
 df = openAsDataframe("DoubleElectron_PU200.root", "TkEle")
-df = cut_and_compute_weights(df, genpt_, pt_)
+df = cut_and_compute_weights(df, genpt_, pt_, ptcut=0)
 
+df["TkEle_in_caloEta"] = df["TkEle_caloEta"].abs()-1
 
 features = [
-    "TkEle_caloEta",
+    "TkEle_in_caloEta",
     #'TkEle_in_caloStaWP',
     #'TkEle_in_caloTkAbsDeta',
     'TkEle_in_caloTkAbsDphi',
     'TkEle_in_tkChi2RPhi',
     #'TkEle_in_caloLooseTkWP',
     'TkEle_in_caloPt',
-    'TkEle_in_caloRelIso',
+    #'TkEle_in_caloRelIso',
     'TkEle_in_caloSS',
-    'TkEle_in_tkPtFrac',
-    'TkEle_in_caloTkNMatch',
+    #'TkEle_in_tkPtFrac',
+    #'TkEle_in_caloTkNMatch',
     'TkEle_in_caloTkPtRatio',
     #'TkEle_idScore',
 ]
 
 df_train, df_test, gen_train, gen_test, ptratio_train, ptratio_test, eta_train, eta_test, dfw_train, dfw_test = train_test_split(df[features], df["TkEle_Gen_pt"], df["TkEle_Gen_ptRatio"], df[eta_], df[["RESw", "BALw", "wTot","w2Tot"]], test_size=0.2, random_state=42)
+
+mask = gen_train.values/df_train[pt_].values<4
+df_train = df_train[mask]
+gen_train = gen_train[mask]
+ptratio_train = ptratio_train[mask]
+eta_train = eta_train[mask]
+dfw_train = dfw_train[mask]
 # %%
 
 
 print("JAX devices:", jax.devices())
 
 model = Sequential([
-    Dense(20, activation='relu', input_shape=(len(features),)),
-    Dense(20, activation='relu'),
-    Dense(20, activation='relu'),
+    Dense(50, activation='relu', input_shape=(len(features),)),
+    Dense(50, activation='relu'),
+    Dense(50, activation='relu'),
+    Dense(50, activation='relu'),
     Dense(20, activation='relu'),
     Dense(1)
 ])
@@ -91,6 +100,9 @@ plt.title('Training and Validation Loss')
 plt.legend()
 plt.grid(True)
 plt.show()
+
+#save model
+model.save(f"models/NN_{metric}_model.keras")
 #%%
 from plot_utils import plot_ptratio_distributions, response_plot  # noqa: E402
 #evaluate on test set
@@ -106,6 +118,6 @@ def plot_results(model, plot_distributions=False):
     eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(df_test,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(4,100,33), plots=plot_distributions, savefolder=f"plots{metric}")
     response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder=f"plots{metric}")
 
-plot_results(model, plot_distributions=True)
+plot_results(model, plot_distributions=False)
 # %%
 

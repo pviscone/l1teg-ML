@@ -15,7 +15,7 @@ pt_ = "TkEle_pt"
 ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio", "Regressed": "TkEle_Gen_ptCorrRatio"}
 #ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio"}
 
-df = openAsDataframe("../step0_ntuple/tempPU200Test/zsnap/era151X_ptRegr_v0/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root", "TkEle")
+df = openAsDataframe("../step0_ntuple/tempA2/zsnap/era151X_ptRegr_v0_A2/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root", "TkEle")
 
 #ForCMSSW
 df["TkEle_Gen_ptCorrRatio"] = df["TkEle_ptCorr"].values/df[genpt_].values
