@@ -1,0 +1,98 @@
+df = openAsDataframe("DoubleElectron_PU200.root", "TkEle")
+
+features = [
+    #'TkEle_in_caloStaWP',
+    #'TkEle_in_caloTkAbsDeta',
+    #'TkEle_in_caloLooseTkWP',
+    #'TkEle_idScore',
+    "hwCaloEta",
+    'caloTkAbsDphi',
+    'hwTkChi2RPhi',
+    'caloPt',
+    #'caloRelIso',
+    'caloSS',
+    #'tkPtFrac',
+    #'caloTkNMatch',
+    'caloTkPtRatio',
+]
+
+df["hwCaloEta"] = np.clip(-1+df["TkEle_hwCaloEta"].abs()/2**8, -1, 1)
+df["caloTkAbsDphi"] = np.clip(-1 + df["TkEle_in_caloTkAbsDphi"]/2**5, -1, 1)
+df["hwTkChi2RPhi"] = np.clip(-1 + df["TkEle_in_hwTkChi2RPhi"]/2**3, -1, 1)
+df["caloPt"] = np.clip(-1+(df["TkEle_in_caloPt"]-1)/2**6, -1, 1)
+df["caloRelIso"] = np.clip(-1 + df["TkEle_in_caloRelIso"]*2**3, -1, 1)
+df["caloSS"] = np.clip(-1 + df["TkEle_in_caloSS"]*2, -1, 1)
+df["tkPtFrac"] = np.clip(-1 + df["TkEle_in_tkPtFrac"]/2**3, -1, 1)
+df["caloTkNMatch"] = np.clip(-1 + df["TkEle_in_caloTkNMatch"]/2**2, -1, 1)
+df["caloTkPtRatio"] = np.clip(-1 + df["TkEle_in_caloTkPtRatio"]/2**3, -1, 1)
+
+
+df[features] = pd.DataFrame(
+    mp_xilinx.mp_xilinx(df[features], f'ap_fixed<{quant}, 1, "AP_RND_CONV", "AP_SAT">', convert="double")
+)
+
+df = cut_and_compute_weights(df, genpt_, pt_, ptcut = 0)
+#%%
+df_train, df_test, gen_train, gen_test, ptratio_train, ptratio_test, eta_train, eta_test, pt_train, pt_test, dfw_train, dfw_test = train_test_split(df[features], df["TkEle_Gen_pt"], df["TkEle_Gen_ptRatio"], df[eta_], df[pt_], df[["RESw", "BALw", "wTot","w2Tot"]], test_size=0.2, random_state=42)
+
+pt_ratio_q_train = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(gen_train.values/pt_train.values), "double")
+pt_ratio_q_test = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(gen_test.values/pt_test.values), "double")
+
+#train_mask = (pt_ratio_q_train < 2.- 1./2**(q_out[0]-q_out[1])) & (pt_ratio_q_train > 0.5)
+train_mask = (pt_ratio_q_train < 4.- 1./2**(q_out[0]-q_out[1]))
+df_train = df_train[train_mask]
+gen_train = gen_train[train_mask]
+pt_ratio_q_train = pt_ratio_q_train[train_mask]
+eta_train = eta_train[train_mask]
+pt_train = pt_train[train_mask]
+dfw_train = dfw_train[train_mask]
+ptratio_train = ptratio_train[train_mask]
+df = openAsDataframe("DoubleElectron_PU200.root", "TkEle")
+
+features = [
+    #'TkEle_in_caloStaWP',
+    #'TkEle_in_caloTkAbsDeta',
+    #'TkEle_in_caloLooseTkWP',
+    #'TkEle_idScore',
+    "hwCaloEta",
+    'caloTkAbsDphi',
+    'hwTkChi2RPhi',
+    'caloPt',
+    #'caloRelIso',
+    'caloSS',
+    #'tkPtFrac',
+    #'caloTkNMatch',
+    'caloTkPtRatio',
+]
+
+df["hwCaloEta"] = np.clip(-1+df["TkEle_hwCaloEta"].abs()/2**8, -1, 1)
+df["caloTkAbsDphi"] = np.clip(-1 + df["TkEle_in_caloTkAbsDphi"]/2**5, -1, 1)
+df["hwTkChi2RPhi"] = np.clip(-1 + df["TkEle_in_hwTkChi2RPhi"]/2**3, -1, 1)
+df["caloPt"] = np.clip(-1+(df["TkEle_in_caloPt"]-1)/2**6, -1, 1)
+df["caloRelIso"] = np.clip(-1 + df["TkEle_in_caloRelIso"]*2**3, -1, 1)
+df["caloSS"] = np.clip(-1 + df["TkEle_in_caloSS"]*2, -1, 1)
+df["tkPtFrac"] = np.clip(-1 + df["TkEle_in_tkPtFrac"]/2**3, -1, 1)
+df["caloTkNMatch"] = np.clip(-1 + df["TkEle_in_caloTkNMatch"]/2**2, -1, 1)
+df["caloTkPtRatio"] = np.clip(-1 + df["TkEle_in_caloTkPtRatio"]/2**3, -1, 1)
+
+
+df[features] = pd.DataFrame(
+    mp_xilinx.mp_xilinx(df[features], f'ap_fixed<{quant}, 1, "AP_RND_CONV", "AP_SAT">', convert="double")
+)
+
+df = cut_and_compute_weights(df, genpt_, pt_, ptcut = 0)
+#%%
+df_train, df_test, gen_train, gen_test, ptratio_train, ptratio_test, eta_train, eta_test, pt_train, pt_test, dfw_train, dfw_test = train_test_split(df[features], df["TkEle_Gen_pt"], df["TkEle_Gen_ptRatio"], df[eta_], df[pt_], df[["RESw", "BALw", "wTot","w2Tot"]], test_size=0.2, random_state=42)
+
+pt_ratio_q_train = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(gen_train.values/pt_train.values), "double")
+pt_ratio_q_test = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(gen_test.values/pt_test.values), "double")
+
+#train_mask = (pt_ratio_q_train < 2.- 1./2**(q_out[0]-q_out[1])) & (pt_ratio_q_train > 0.5)
+train_mask = (pt_ratio_q_train < 4.- 1./2**(q_out[0]-q_out[1]))
+df_train = df_train[train_mask]
+gen_train = gen_train[train_mask]
+pt_ratio_q_train = pt_ratio_q_train[train_mask]
+eta_train = eta_train[train_mask]
+pt_train = pt_train[train_mask]
+dfw_train = dfw_train[train_mask]
+ptratio_train = ptratio_train[train_mask]

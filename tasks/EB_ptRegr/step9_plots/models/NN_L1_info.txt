@@ -1,0 +1,23 @@
+model = Sequential([
+    Dense(50, activation='relu', input_shape=(len(features),)),
+    Dense(50, activation='relu'),
+    Dense(50, activation='relu'),
+    Dense(50, activation='relu'),
+    Dense(20, activation='relu'),
+    Dense(1)
+])
+
+initial_learning_rate = 0.0005
+optimizer = keras.optimizers.Adam(learning_rate=initial_learning_rate)
+model.compile(optimizer=optimizer, loss=loss, jit_compile=True)
+
+
+# Plot training & validation loss values
+history = model.fit(
+    df_train, gen_train,
+    sample_weight=dfw_train[w].values,
+    epochs=50,
+    batch_size=256,
+    validation_data=(df_test, gen_test),
+    verbose=1
+)
