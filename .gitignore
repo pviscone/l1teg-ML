@@ -116,9 +116,7 @@ ENV/
 *.jpeg
 **/results
 **/temp*/*
-**/plots
 **/outputs
-**/plots*/*
 **/plotDir
 **/out/
 *.json
