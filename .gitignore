@@ -126,3 +126,4 @@ ENV/
 *.png
 *.keras
 !tasks/EB_ptRegr/step9_plots/**
+tasks/EB_ptRegr/step9_plots/**/index.php
