@@ -57,3 +57,6 @@ train = "../step0_ntuple/tempTrain/zsnap/era151Xv0pre4_TkElePtRegr_dev_withScale
 
 minbias = "/eos/cms/store/cmst3/group/l1tr/pviscone/l1teg/fp_ntuples/NuGunAllEta_PU200/FP/151X_ptRegr_v0_A2/*.root"
 doubleEle ="/eos/cms/store/cmst3/group/l1tr/pviscone/l1teg/fp_ntuples/DoubleElectron_FlatPt-1To100_PU200/FP/151X_ptRegr_v0_A2/*.root"
+
+xee = "../step6_BDT_XeeScouting/tempXee/era151X_ptRegr_v0_A2/main_noRegress_4_matchingGenCut/DPCandidates_mass.root"
+xee_regr = "../step6_BDT_XeeScouting/tempXee/era151X_ptRegr_v0_A2/main_regressed_4_matchingGenCut/DPCandidates_mass.root"
