@@ -71,7 +71,7 @@ def plot_ptratio_distributions(df,
     perc95s = []
     residuals = []
     variances = []
-    eta = df[eta_].values
+    eta = np.abs(df[eta_].values)
     ptratio_dict = {key: df[value].values for key, value in ptratio_dict.items()}
     genpt = df[genpt_].values
 
@@ -151,7 +151,7 @@ def plot_ptratio_distributions_n(df,
     residuals = []
     variances = []
     n = []
-    eta = df[eta_].values
+    eta = np.abs(df[eta_].values)
     ptratio_dict = {key: df[value].values for key, value in ptratio_dict.items()}
     genpt = df[genpt_].values
 

@@ -52,3 +52,8 @@ target_bins = hist.axis.Regular(30, 0, 4)
 
 testA2 = "../step0_ntuple/tempA2/zsnap/era151X_ptRegr_v0_A2/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root"
 train = "../step0_ntuple/tempTrain/zsnap/era151Xv0pre4_TkElePtRegr_dev_withScaled/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root"
+
+
+
+minbias = "/eos/cms/store/cmst3/group/l1tr/pviscone/l1teg/fp_ntuples/NuGunAllEta_PU200/FP/151X_ptRegr_v0_A2/*.root"
+doubleEle ="/eos/cms/store/cmst3/group/l1tr/pviscone/l1teg/fp_ntuples/DoubleElectron_FlatPt-1To100_PU200/FP/151X_ptRegr_v0_A2/*.root"
