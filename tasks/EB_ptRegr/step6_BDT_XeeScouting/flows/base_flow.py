@@ -8,6 +8,9 @@ def flow():
     tree.add("noRegress", [
                       DefineSkimmedCollection("GenEl", mask="GenEl_prompt==2"),
                       Cut("nGenElBarrel==2", "Sum(abs(GenEl_caloeta)<1.479)==2", samplePattern="(?!MinBias).*"),
+                      Define("GenEl_p4", "makeP4(GenEl_pt, GenEl_eta,GenEl_phi,0.000511)"),
+                      Define("GenZd_p4", "GenEl_p4[0]+GenEl_p4[1]"),
+                      Define("GenZd_mass", "GenZd_p4.mass()"),
                       Define("TkEleL2_originalPt", "TkEleL2_pt")])
 
     tree.add("regressed", [

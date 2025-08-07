@@ -10,6 +10,7 @@ plots={
         Hist("TkEleL2_eta", "TkEleL2_caloEta"),
         Hist("TkEleL2_phi", "TkEleL2_caloPhi"),
         Hist("TkEleL2_ptRatio", "TkEleL2_ptCorr/TkEleL2_originalPt"),
+        Hist("GenZd_mass", "GenZd_mass"),
     ],
 
     "OSPair":[
