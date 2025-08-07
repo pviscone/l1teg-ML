@@ -41,7 +41,7 @@ bdt.load_model("models/xgboost_model_L1.json")
 
 
 #%%
-from plot_utils import plot_ptratio_distributions_n, response_plot, resolution_plot  # noqa: E402
+from plot_utils import plot_ptratio_distributions_n_width, response_plot, resolution_plot  # noqa: E402
 #evaluate on test set
 
 collection = "TkEle"
@@ -59,9 +59,9 @@ def plot_results(bdt, eta_bins=None, plot_distributions=False):
     df[ptratio_dict["BDT"]] = bdt.predict(df[features].values)*df[pt_].values/df[genpt_]
     df[ptratio_dict["Quantized BDT"]] = ptratio_corr
 
-    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, n = plot_ptratio_distributions_n(df,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(1,100,34), eta_bins=eta_bins, plots=plot_distributions, savefolder="plots/step4_quantization")
+    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, n, width = plot_ptratio_distributions_n_width(df,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(1,100,34), eta_bins=eta_bins, plots=plot_distributions, savefolder="plots/step4_quantization")
     response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder="plots/step4_quantization", verbose=False)
-    resolution_plot(ptratio_dict, eta_bins, centers, perc16s, perc84s, variances=variances, n=n, savefolder="plots/step4_quantization")
+    resolution_plot(ptratio_dict, eta_bins, centers, width, variances=variances, n=n, savefolder="plots/step4_quantization")
 
 plot_results(bdt, eta_bins = np.array([0,1.479]), plot_distributions=False)
 plot_results(bdt, plot_distributions=False)
