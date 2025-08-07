@@ -1,5 +1,5 @@
 #%%
-from common import xee, xee_regr
+from common import xee, xee_regr, genZd
 import uproot as up
 import matplotlib.pyplot as plt
 import mplhep as hep
@@ -10,14 +10,15 @@ os.makedirs("plots/step9_xee", exist_ok=True)
 
 hep.style.use("CMS")
 
-
+print(genZd)
 xee = up.open(xee)
 xee_regr = up.open(xee_regr)
+genZd = up.open(genZd)
 
 masses = [5,10,15,20,30]
 xee= [xee[f"XeeM{m}"].to_hist() for m in masses]
 xee_regr = [xee_regr[f"XeeM{m}"].to_hist() for m in masses]
-
+genZd = [genZd[f"XeeM{m}"].to_hist() for m in masses]
 
 #%%
 size= (1,5)
@@ -30,6 +31,7 @@ xlims = (
     (16,36)
 )
 rebin = [1,1,1,1,1]
+plot_gen=False
 
 fig,ax = plt.subplots(size[0], size[1], figsize=(15, 4), sharey=True, gridspec_kw={"hspace": 0., "wspace": 0})
 ax= ax.reshape(size)
@@ -38,6 +40,7 @@ for i1 in range(size[0]):
         i = i1*size[0] + i2
         xee_h = xee[i][hist.rebin(rebin[i])]
         xee_regr_h = xee_regr[i][hist.rebin(rebin[i])]
+        genZd_h = genZd[i][hist.rebin(rebin[i])]
         hep.histplot(
             xee_h,
             ax=ax[i1,i2],
@@ -60,6 +63,19 @@ for i1 in range(size[0]):
             label = "After regression",
             density=True,
         )
+
+        if plot_gen:
+            hep.histplot(
+                genZd_h,
+                ax=ax[i1,i2],
+                color="goldenrod",
+                label = "Gen",
+                linestyle='--',
+                linewidth=2,
+                density=True,
+            )
+
+
         ax[i1,i2].axvline(masses[i], 0, 0.75, alpha = 0.3, color='black', linestyle='--', linewidth=1.5)
         ax[i1,i2].set_xlim(*xlims[i])
         ax[i1,i2].set_ylim(0,1.3)

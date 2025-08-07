@@ -39,7 +39,7 @@ feature_bins = {
     "in_hwTkChi2RPhi": hist.axis.Regular(30, 0, 15),
     "in_caloPt": hist.axis.Regular(20, 0, 100),
     "in_caloSS": hist.axis.Regular(30, 0.3, 1),
-    "in_caloTkPtRatio": hist.axis.Regular(30, 0, 50)
+    "in_caloTkPtRatio": hist.axis.Regular(80, 0, 50)
 }
 
 target = "TkEle_Gen_ptRatio"
@@ -60,3 +60,6 @@ doubleEle ="/eos/cms/store/cmst3/group/l1tr/pviscone/l1teg/fp_ntuples/DoubleElec
 
 xee = "../step6_BDT_XeeScouting/tempXee/era151X_ptRegr_v0_A2/main_noRegress_4_matchingGenCut/DPCandidates_mass.root"
 xee_regr = "../step6_BDT_XeeScouting/tempXee/era151X_ptRegr_v0_A2/main_regressed_4_matchingGenCut/DPCandidates_mass.root"
+
+genZd = "../step6_BDT_XeeScouting/tempXee/era151X_ptRegr_v0_A2/main_noRegress_4_matchingGenCut/GenZd_mass.root"
+
