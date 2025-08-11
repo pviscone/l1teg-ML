@@ -141,9 +141,9 @@ plt.savefig(f"plots/plots_q{quant}/feature_importance.pdf")
 plt.show()
 
 #%%
-from plot_utils import plot_ptratio_distributions, response_plot  # noqa: E402
+from plot_utils import plot_ptratio_distributions_n_width, response_plot, resolution_plot  # noqa: E402
 #evaluate on test set
-def plot_results(model, plot_distributions=False, q_out=(11,2)):
+def plot_results(model, plot_distributions=False, q_out=(11,2), eta_bins=None):
     global ptratio_test, ptratio_dict, gen_test, genpt_, eta_test, eta_, pt_
     df_test[ptratio_dict["NoRegression"]] = ptratio_test
     df_test[genpt_] = gen_test
@@ -158,8 +158,10 @@ def plot_results(model, plot_distributions=False, q_out=(11,2)):
     os.makedirs(f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}", exist_ok=True)
 
 
-    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(df_test,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(1,100,34), plots=plot_distributions, savefolder=f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}")
+    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, n, width = plot_ptratio_distributions_n_width(df_test,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(1,100,34), plots=plot_distributions, eta_bins=eta_bins, savefolder=f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}")
     response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder=f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}")
+    resolution_plot(ptratio_dict, eta_bins, centers, width, variances=variances, n=n, savefolder=f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}")
 
-plot_results(model, q_out=q_out, plot_distributions=True)
+plot_results(model, q_out=q_out, plot_distributions=False)
+plot_results(model, q_out=q_out, eta_bins=np.array([0,1.479]), plot_distributions=False)
 # %%

@@ -17,7 +17,7 @@ pt_ = f"{collection}_in_caloPt"
 ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio",
                 "Regressed": "TkEle_regressedPtRatio"}
 
-metric = "L2"
+metric = "L1"
 
 if metric == "L1":
     loss = "reg:absoluteerror"
@@ -118,9 +118,9 @@ plt.show()
 model.save_model(f"plots{metric}/xgboost_model_{metric}.json")
 
 #%%
-from plot_utils import plot_ptratio_distributions, response_plot  # noqa: E402
+from plot_utils import plot_ptratio_distributions_n_width, response_plot, resolution_plot  # noqa: E402
 #evaluate on test set
-def plot_results(model, plot_distributions=False):
+def plot_results(model, plot_distributions=False, eta_bins=None):
     global ptratio_test, ptratio_dict, gen_test, genpt_, eta_test, eta_
     df_test[ptratio_dict["NoRegression"]] = ptratio_test
     df_test[genpt_] = gen_test
@@ -129,10 +129,12 @@ def plot_results(model, plot_distributions=False):
 
 
 
-    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(df_test,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(4,100,33), plots=plot_distributions, savefolder=f"plots{metric}")
+    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, n , width = plot_ptratio_distributions_n_width(df_test,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(4,100,33), plots=plot_distributions, savefolder=f"plots{metric}", eta_bins=eta_bins)
     response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder=f"plots{metric}")
+    resolution_plot(ptratio_dict, eta_bins, centers, width, variances=variances, n=n, savefolder=f"plots{metric}")
 
 plot_results(model, plot_distributions=False)
+plot_results(model, plot_distributions=False, eta_bins=np.array([0,1.479]))
 # %%
 dump_file = open(f"plots{metric}/logger.log", "w")
 model_df = model.get_booster().trees_to_dataframe()

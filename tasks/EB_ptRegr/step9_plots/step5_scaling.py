@@ -10,8 +10,17 @@ from hist.intervals import ratio_uncertainty
 from common import testA2
 from scipy.stats import norm
 import os
+import sys
+sys.path.append("../utils")
+sys.path.append("../../../utils/BitHub")
+sys.path.append("../../../utils/conifer")
+from bithub.quantizers import mp_xilinx
+from file_utils import openAsDataframe
+import conifer
+from common_q import features_q, scale, init_pred
+import pandas as pd
 
-os.makedirs("plots/step6_scaling", exist_ok=True)
+os.makedirs("plots/step5_scaling", exist_ok=True)
 
 def array(f, key):
     return ak.flatten(f[key].array()).to_numpy()
@@ -59,10 +68,26 @@ cms10 = [
 
 f = up.open(testA2)["Events"]
 
-ptCorr = array(f, "TkEle_ptCorr")
 pt = array(f, "TkEle_pt")
 hwQual = array(f, "TkEle_hwQual")
 gen = array(f, "TkEle_Gen_pt")
+#%%
+cpp_cfg = conifer.backends.cpp.auto_config()
+cpp_cfg["InputPrecision"] = "ap_fixed<10,1,AP_RND_CONV,AP_SAT>"
+cpp_cfg["ThresholdPrecision"] = "ap_fixed<10,1,AP_RND_CONV,AP_SAT>"
+cpp_cfg["ScorePrecision"] = "ap_fixed<12,3,AP_RND_CONV,AP_SAT>"
+
+model_q = conifer.model.load_model("models/conifer_model_L1_q10_hls.json", new_config=cpp_cfg)
+model_q.compile()
+
+quant = 10
+q_out = (12,3)
+df = openAsDataframe(testA2, "TkEle")
+df = scale(df)
+df[features_q] = pd.DataFrame(
+    mp_xilinx.mp_xilinx(df[features_q], f'ap_fixed<{quant}, 1, "AP_RND_CONV", "AP_SAT">', convert="double")
+)
+ptCorr = (init_pred+model_q.decision_function(df[features_q].values)[:,0])*pt
 
 tight_mask = (hwQual & 2 )==2
 ptCorr = ptCorr[tight_mask]
@@ -70,10 +95,8 @@ pt = pt[tight_mask]
 gen = gen[tight_mask]
 
 den_h = hist.Hist(hist.axis.Regular(200, 3, 80))
-den_h.fill(array(f, "TkEle_Gen_pt"))
+den_h.fill(gen)
 
-#yCorr=[]
-#y = []
 y95 = []
 yCorr95 = []
 
@@ -113,6 +136,7 @@ for idx,cut in enumerate(pt_cuts):
     ax.plot(xx,f_yc(xx, *popt), color="dodgerblue", linewidth=3, label="Fit Non-regressed", linestyle="--")
     ax.axhline(0.95, color="black", linestyle=":", linewidth=1, alpha = 0.3)
     ax.set_xlim(cut-10, cut+20)
+    ax.set_ylim(-0.05,1.09)
     ax.legend(fontsize=14)
     y95.append(find_inverse(f_yc, 0.95, cut-10, cut+20, *popt))
     yCorr95.append(find_inverse(f_yc, 0.95, cut-10, cut+20, *poptCorr))
@@ -121,8 +145,8 @@ for idx,cut in enumerate(pt_cuts):
     ax.plot(yCorr95[-1], 0.95,"*", color="white", markeredgecolor="red", markersize=20, zorder=999, )
     ax.set_xlabel("Gen pT [GeV]")
     ax.set_ylabel("Efficiency pT [GeV]")
-    fig.savefig(f"plots/step6_scaling/turn_on_{cut:.2f}.pdf", bbox_inches="tight")
-    fig.savefig(f"plots/step6_scaling/turn_on_{cut:.2f}.png", bbox_inches="tight")
+    fig.savefig(f"plots/step5_scaling/turn_on_{cut:.2f}.pdf", bbox_inches="tight")
+    fig.savefig(f"plots/step5_scaling/turn_on_{cut:.2f}.png", bbox_inches="tight")
 
 #%%
 
@@ -143,6 +167,6 @@ ax.set_xlabel("Online pT cut [GeV]")
 ax.set_ylabel("95% efficiency pT [GeV]")
 mplhep.cms.text("Phase-2 Simulation Preliminary", ax=ax)
 mplhep.cms.lumitext("PU 200", ax=ax)
-fig.savefig("plots/step6_scaling/online_to_offline_scaling.pdf", bbox_inches="tight")
-fig.savefig("plots/step6_scaling/online_to_offline_scaling.png", bbox_inches="tight")
+fig.savefig("plots/step5_scaling/online_to_offline_scaling.pdf", bbox_inches="tight")
+fig.savefig("plots/step5_scaling/online_to_offline_scaling.png", bbox_inches="tight")
 # %%

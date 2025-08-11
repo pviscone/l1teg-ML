@@ -21,6 +21,8 @@ from bithub.quantizers import mp_xilinx
 xgb_model = xgb.XGBRegressor()
 xgb_model.load_model("xgboost_model_L1_q10.json")
 
+
+
 # %%
 #!----------------------Convert Model----------------------!#
 cfg = conifer.backends.xilinxhls.auto_config(granularity="full")
@@ -32,8 +34,8 @@ cfg["ClockPeriod"] = 4.16666666
 
 
 
-hls_model = conifer.converters.convert_from_xgboost(xgb_model, cfg)
-print("Model converted")
+hls_model = conifer.model.load_model("conifer_model_L1_q10_hls.json", new_config=cfg)
+print("Model loaded")
 hls_model.compile()
 print("Model compiled")
 #hls_model.build()
@@ -100,7 +102,7 @@ cpp_cfg["InputPrecision"] = "ap_fixed<10,1,AP_RND_CONV,AP_SAT>"
 cpp_cfg["ThresholdPrecision"] = "ap_fixed<10,1,AP_RND_CONV,AP_SAT>"
 cpp_cfg["ScorePrecision"] = "ap_fixed<12,3,AP_RND_CONV,AP_SAT>"
 
-cpp_model = conifer.converters.convert_from_xgboost(xgb_model, cpp_cfg)
+cpp_model = conifer.model.load_model("conifer_model_L1_q10_hls.json", new_config=cpp_cfg)
 cpp_model.compile()
 # %%
 xgb_full=xgb_model.predict(df[features])
@@ -117,4 +119,6 @@ print(f"Mean diff: {np.mean(diff)}")
 # %%
 import matplotlib.pyplot as plt
 plt.hist(diff,bins=100)
-plt.axvline(517*2**-9)
+plt.axvline(512*2**-9)
+plt.savefig("diff_hist.png")
+# %%

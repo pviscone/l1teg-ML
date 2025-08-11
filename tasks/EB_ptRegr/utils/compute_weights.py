@@ -28,8 +28,8 @@ def cut_and_compute_weights(df, genpt_, pt_, genpt_bins=None, ptcut=4):
         center = (genpt_min + genpt_max) / 2
         mask = (df[genpt_] >= genpt_min) & (df[genpt_] < genpt_max)
         df_mask = df[mask]
-        mad_h[hist.loc(center)] = 1/np.median(np.abs(df_mask[pt_]-df_mask[genpt_]))
-        var_h[hist.loc(center)] = 1/np.sum(((df_mask[pt_]-df_mask[genpt_])**2)/(len(df_mask) - 1))
+        mad_h[hist.loc(center)] = 1/np.median(np.abs(1-df_mask[genpt_]/df_mask[pt_]))
+        var_h[hist.loc(center)] = 1/np.sum(((1-df_mask[genpt_]/df_mask[pt_])**2)/(len(df_mask) - 1))
 
     df["VARw"]=np.array([var_h[hist.loc(v)] for v in df[genpt_].values])
     df["RESw"]=np.array([mad_h[hist.loc(v)] for v in df[genpt_].values])
