@@ -11,7 +11,7 @@ from common import testA2
 from scipy.stats import norm
 import os
 
-os.makedirs("plots/step6_scaling", exist_ok=True)
+os.makedirs("plots/step5_scaling", exist_ok=True)
 
 def array(f, key):
     return ak.flatten(f[key].array()).to_numpy()
@@ -70,7 +70,7 @@ pt = pt[tight_mask]
 gen = gen[tight_mask]
 
 den_h = hist.Hist(hist.axis.Regular(200, 3, 80))
-den_h.fill(array(f, "TkEle_Gen_pt"))
+den_h.fill(gen)
 
 #yCorr=[]
 #y = []
@@ -121,8 +121,9 @@ for idx,cut in enumerate(pt_cuts):
     ax.plot(yCorr95[-1], 0.95,"*", color="white", markeredgecolor="red", markersize=20, zorder=999, )
     ax.set_xlabel("Gen pT [GeV]")
     ax.set_ylabel("Efficiency pT [GeV]")
-    fig.savefig(f"plots/step6_scaling/turn_on_{cut:.2f}.pdf", bbox_inches="tight")
-    fig.savefig(f"plots/step6_scaling/turn_on_{cut:.2f}.png", bbox_inches="tight")
+    ax.set_ylim(-0.05,1.1)
+    fig.savefig(f"plots/step5_scaling/turn_on_{cut:.2f}.pdf", bbox_inches="tight")
+    fig.savefig(f"plots/step5_scaling/turn_on_{cut:.2f}.png", bbox_inches="tight")
 
 #%%
 
@@ -141,8 +142,10 @@ ax.plot(pt_cuts, f(pt_cuts, *popt), color="orange", label=f"Non-regressed scalin
 ax.legend(fontsize=16)
 ax.set_xlabel("Online pT cut [GeV]")
 ax.set_ylabel("95% efficiency pT [GeV]")
+ax.set_ylim(10, 60)
+ax.set_xlim(5, 55)
 mplhep.cms.text("Phase-2 Simulation Preliminary", ax=ax)
 mplhep.cms.lumitext("PU 200", ax=ax)
-fig.savefig("plots/step6_scaling/online_to_offline_scaling.pdf", bbox_inches="tight")
-fig.savefig("plots/step6_scaling/online_to_offline_scaling.png", bbox_inches="tight")
+fig.savefig("plots/step5_scaling/online_to_offline_scaling.pdf", bbox_inches="tight")
+fig.savefig("plots/step5_scaling/online_to_offline_scaling.png", bbox_inches="tight")
 # %%

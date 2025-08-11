@@ -53,20 +53,21 @@ def fill(array, nev):
     return h
 
 def ptcorr_scaling(x):
-    return 1.05*x+3.19
+    return 1.07*x+1.64
 
 def pt_scaling(x):
-    return 1.05*x+4.96
+    return 1.09*x+2.81
 
 
 #h_pt = fill(pt_scaling(res["Lead_pt"]), nevents)
 #h_pt_corr = fill(ptcorr_scaling(res["Lead_ptCorr"]), nevents)
-h_pt_tight = fill(pt_scaling(res_tight["LeadTight_pt"]), nevents_tight)
-h_pt_corr_tight = fill(ptcorr_scaling(res_tight["LeadTight_ptCorr"]), nevents_tight)
-
+h_pt_tight_offline= fill(pt_scaling(res_tight["LeadTight_pt"]), nevents_tight)
+h_pt_corr_tight_offline= fill(ptcorr_scaling(res_tight["LeadTight_ptCorr"]), nevents_tight)
+h_pt_tight= fill(res_tight["LeadTight_pt"], nevents_tight)
+h_pt_corr_tight= fill(res_tight["LeadTight_ptCorr"], nevents_tight)
 
 #%%
-rate = TRate(ylim=(1, 4e4), xlim=(-1,80), xlabel = "Offline $p_{T}$ [GeV]", cmstext="Phase-2 Simulation Preliminary", lumitext="PU 200")
+rate = TRate(ylim=(1, 4e4), xlim=(-1,80), xlabel = "Online $p_{T}$ [GeV]", cmstext="Phase-2 Simulation Preliminary", lumitext="PU 200")
 
 #rate.add(h_pt_corr, label="Regressed")
 #rate.add(h_pt, label="No Regression")
@@ -74,7 +75,19 @@ rate = TRate(ylim=(1, 4e4), xlim=(-1,80), xlabel = "Offline $p_{T}$ [GeV]", cmst
 rate.add(h_pt_corr_tight, label="Regressed (Tight)")
 rate.add(h_pt_tight, label="No Regression (Tight)")
 rate.ax.axhline(18, color="gray", linestyle="--", alpha=0.5)
-#rate.save("plots/step6_rate/step6_rate_rate.pdf")
-#rate.save("plots/step6_rate/step6_rate_rate.png")
+rate.save("plots/step6_rate/step6_rate_online_rate.pdf")
+rate.save("plots/step6_rate/step6_rate_online_rate.png")
+
+#%%
+rate = TRate(ylim=(1, 4e4), xlim=(-1,80), xlabel = "Offline $p_{T}$ [GeV]", cmstext="Phase-2 Simulation Preliminary", lumitext="PU 200")
+
+#rate.add(h_pt_corr, label="Regressed")
+#rate.add(h_pt, label="No Regression")
+
+rate.add(h_pt_corr_tight_offline, label="Regressed (Tight)")
+rate.add(h_pt_tight_offline, label="No Regression (Tight)")
+rate.ax.axhline(18, color="gray", linestyle="--", alpha=0.5)
+rate.save("plots/step6_rate/step6_rate_offline_rate.pdf")
+rate.save("plots/step6_rate/step6_rate_offline_rate.png")
 
 #%%
