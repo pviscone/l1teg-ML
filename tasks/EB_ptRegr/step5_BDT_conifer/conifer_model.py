@@ -88,15 +88,17 @@ df[features] = pd.DataFrame(
 )
 
 #%%
-from plot_utils import plot_ptratio_distributions, response_plot  # noqa: E402
+from plot_utils import plot_ptratio_distributions_n_width, response_plot, resolution_plot  # noqa: E402
 #evaluate on test set
-def plot_results(model, hlsmodel, plot_distributions=False, savefolder="plots"):
+def plot_results(model, hlsmodel, plot_distributions=False, savefolder="plots", eta_bins=None):
     df[ptratio_dict["Regressed"]] = model.predict(df[features].values)*df[pt_].values/df[genpt_]
 
     df[ptratio_dict["HLSRegressed"]] = (1+hlsmodel.decision_function(df[features].values))*df[pt_].values/df[genpt_]
 
-    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances = plot_ptratio_distributions(df,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(1,100,34), plots=plot_distributions, savefolder=savefolder)
+    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances,n, width = plot_ptratio_distributions_n_width(df,ptratio_dict,genpt_,eta_, genpt_bins=np.linspace(1,100,34), plots=plot_distributions, savefolder=savefolder, eta_bins=eta_bins)
     response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder=savefolder)
+    resolution_plot(ptratio_dict, eta_bins, centers, width, variances=variances, n=n, savefolder=savefolder)
 
-plot_results(xgb_model, hls_model, plot_distributions=True, savefolder="plots")
+plot_results(xgb_model, hls_model, plot_distributions=False, savefolder="plots")
+plot_results(xgb_model, hls_model, plot_distributions=False, savefolder="plots", eta_bins=np.array([0,1.479]))
 # %%
