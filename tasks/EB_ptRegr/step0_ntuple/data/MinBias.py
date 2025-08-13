@@ -7,18 +7,18 @@ all_processes={
             {
             "name": "MinBias",
             "samples": {
-                "NuGunAllEta_PU200":
+                "NuGunAllEta_PU200_train":
                     {
-                    "xsec": 31038.96, #(2760.0 * 11246 / 1000) RATE (ev per sec / 1000) *1000 * 60days (equivalent to 400fb-1)
+                    "xsec": None,
                     },
                 },
-            "genSumWeightName": "_nevents_",
-            "weight": "1.",
-            "cut":"1",
+            "genWeightName": None,
+            "weight": "1",
             },
         ],
-        "label":"MinBias",
         "signal": False,
+        "label":"MinBias PU200",
         "color": cms10[0],
-    },
+    }
 }
+

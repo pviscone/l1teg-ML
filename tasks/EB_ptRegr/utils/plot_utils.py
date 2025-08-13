@@ -481,7 +481,7 @@ def resolution_plot(ptratio_dict, eta_bins, centers, width, variances=None, n=No
                 yerr = np.sqrt(3.715* variances[eta_idx][label]/n[eta_idx][label])[:-1]/centers[eta_idx][label][:-1]
             else:
                 yerr=None
-            ax.errorbar(centers[eta_idx][label][:-1], width[eta_idx][label][:-1], xerr=diff, yerr=yerr, marker='o', label=label, color=colors[idx], markeredgecolor='black', markeredgewidth=1, markersize=5, ls="none")
+            ax.errorbar(centers[eta_idx][label][:-1], width[eta_idx][label][:-1], xerr=diff, yerr=yerr/2, marker='o', label=label, color=colors[idx], markeredgecolor='black', markeredgewidth=1, markersize=5, ls="none")
         ax.legend()
         ax.set_ylim(0, 0.3)
         #ax.set_yscale("log")
@@ -490,3 +490,116 @@ def resolution_plot(ptratio_dict, eta_bins, centers, width, variances=None, n=No
         fig.savefig(f"{savefolder}/resolution_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.pdf")
         fig.savefig(f"{savefolder}/resolution_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.png")
         plt.close(fig)
+
+def plot_xgb_loss(l1_metric, savefolder="plots"):
+    fig, ax = plt.subplots()
+    for k, metric in l1_metric.items():
+        if k=="train":
+            linestyle = "-"
+        else:
+            linestyle = "--"
+        ax.plot(metric.sig_mae*25, label=f"25*Signal MAE ({k})", linestyle=linestyle,color="red")
+        ax.plot(metric.sig_median, label=f"Sig median ({k})", linestyle=linestyle,color="purple")
+        ax.plot(metric.sig_quant95, label=f"Sig 95% quantile ({k})", linestyle=linestyle,color="orange")
+        ax.plot(metric.bkg_mae, label=f"Bkg Mean ({k})", linestyle=linestyle,color="blue")
+        ax.plot(metric.bkg_quant95, label=f"Bkg 95% quantile ({k})", linestyle=linestyle,color="green")
+        #ax.plot(metric.mae, label=f"Total MAE ({k})", linestyle=linestyle,color="orange")
+    ax.axhline(1, color='black', linestyle='--', alpha = 0.5)
+    ax.legend(fontsize = 12, loc = "center right")
+    hep.cms.text("Phase-2 Simulation Preliminary")
+    hep.cms.lumitext("PU 200")
+    if savefolder:
+        os.makedirs(savefolder, exist_ok=True)
+        fig.savefig(savefolder + "/metrics.png")
+        fig.savefig(savefolder + "/metrics.pdf")
+    plt.show()
+
+
+def plot_xgb_importance(model, features, savefolder="plots"):
+    # Plot feature importance
+    importances = model.feature_importances_
+    plt.figure(figsize=(10, 6))
+    plt.barh(features, importances)
+    plt.xlabel("Feature Importance")
+    plt.title("XGBoost Feature Importances")
+    plt.tight_layout()
+    if savefolder:
+        os.makedirs(savefolder, exist_ok=True)
+        plt.savefig(savefolder + "/feature_importance.pdf")
+        plt.savefig(savefolder + "/feature_importance.png")
+    plt.show()
+
+
+
+def plot_results(df, ptratio_dict, genpt_, eta_, eta_bins=None, verbose=False, genpt_bins=None, savefolder="plots"):
+    if genpt_bins is None:
+        genpt_bins = np.linspace(1,100,34)
+    os.makedirs(savefolder, exist_ok=True)
+    eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, n, width = plot_ptratio_distributions_n_width(df,ptratio_dict,genpt_,eta_, genpt_bins=genpt_bins, eta_bins=eta_bins, plots=verbose, savefolder=savefolder)
+    response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, savefolder=savefolder, verbose=verbose)
+    resolution_plot(ptratio_dict, eta_bins, centers, width, variances=variances, n=n, savefolder=savefolder)
+
+
+def plot_bkg(model, df_test, features_q, pt_, verbose=False, savefolder=None, what="all", bins=None):
+    if bins is None:
+        bins = np.arange(1,101,5)
+    if what.lower()=="all":
+        what = "median,q64,q95,mean"
+    what= what.lower().split(",")
+    os.makedirs(savefolder, exist_ok=True)
+    df_test_bkg = df_test[df_test["label"].values==0]
+    df_test_sig = df_test[df_test["label"].values==1]
+    median_bkg = np.array([])
+    q95_bkg = np.array([])
+    q64_bkg = np.array([])
+    mean_bkg = np.array([])
+    median_sig = np.array([])
+    q95_sig = np.array([])
+    q64_sig = np.array([])
+    mean_sig = np.array([])
+    center = np.array([])
+    for min_pt, max_pt in zip(bins[:-1], bins[1:]):
+        df_bkg_pt = df_test_bkg[(df_test_bkg[pt_] >= min_pt) & (df_test_bkg[pt_] < max_pt)]
+        df_sig_pt = df_test_sig[(df_test_sig[pt_] >= min_pt) & (df_test_sig[pt_] < max_pt)]
+
+        if len(df_bkg_pt) == 0:
+            continue
+        df_bkg_pt["model_output"] = model.predict(df_bkg_pt[features_q])
+        df_sig_pt["model_output"] = model.predict(df_sig_pt[features_q])
+        if verbose:
+            fig, ax = plt.subplots()
+            ax.hist(df_bkg_pt["model_output"].values, bins=100, range=(0, 2), density=True,label="BKG")
+            ax.hist(df_sig_pt["model_output"].values, bins=100, range=(0, 2), density=True,label="SIG", histtype='step')
+            ax.set_title(f"pt: {min_pt} - {max_pt}")
+            ax.legend()
+            ax.set_xlabel("Model output")
+            ax.set_ylabel("Density")
+            fig.savefig(os.path.join(savefolder, f"pt_{min_pt}_{max_pt}.png"))
+        median_bkg = np.append(median_bkg,np.median(df_bkg_pt["model_output"]))
+        q95_bkg= np.append(q95_bkg,np.quantile(df_bkg_pt["model_output"], 0.95))
+        q64_bkg= np.append(q64_bkg,np.quantile(df_bkg_pt["model_output"], 0.64))
+        mean_bkg= np.append(mean_bkg, np.mean(df_bkg_pt["model_output"]))
+        median_sig = np.append(median_sig,np.median(df_sig_pt["model_output"]))
+        q95_sig= np.append(q95_sig,np.quantile(df_sig_pt["model_output"], 0.95))
+        q64_sig= np.append(q64_sig,np.quantile(df_sig_pt["model_output"], 0.64))
+        mean_sig= np.append(mean_sig, np.mean(df_sig_pt["model_output"]))
+        center = np.append(center, (min_pt + max_pt)/2)
+    fig, ax = plt.subplots()
+    if "median" in what:
+        ax.plot(center, median_bkg, label="Bkg median", color="blue", marker='o')
+        ax.plot(center, median_sig, label="Sig median", color="blue", linestyle='--', marker='o')
+    if "q64" in what:
+        ax.plot(center, q64_bkg, label="Bkg 64%", color="orange", marker='o')
+        ax.plot(center, q64_sig, label="Sig 64%", color="orange", linestyle='--', marker='o')
+    if "q95" in what:
+        ax.plot(center, q95_bkg, label="Bkg 95%", color="red", marker='o')
+        ax.plot(center, q95_sig, label="Sig 95%", color="red", linestyle='--', marker='o')
+    if "mean" in what:
+        ax.plot(center, mean_bkg, label="Bkg mean", color="green", marker='o')
+        ax.plot(center, mean_sig, label="Sig mean", color="green", linestyle='--', marker='o')
+    ax.set_xlabel("Calo pT")
+    ax.set_ylabel("Model output")
+    ax.legend()
+    if savefolder is not None:
+        fig.savefig(os.path.join(savefolder, "bkg_sig.png"))
+        fig.savefig(os.path.join(savefolder, "bkg_sig.pdf"))

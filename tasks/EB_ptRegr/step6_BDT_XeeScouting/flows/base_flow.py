@@ -1,8 +1,70 @@
 from cmgrdf_cli.flows import Tree
 from CMGRDF import Define, Cut, ReDefine
-from CMGRDF.collectionUtils import DefineSkimmedCollection, DefineP4, DefineFromCollection
+from CMGRDF.collectionUtils import DefineSkimmedCollection
+import ROOT
+import os
+import sys
+
+sys.path.append("../")
+from common import quant, q_out, features_q, conifermodel, init_pred
+
+in_q = (quant, 1)
+out_q = (q_out[0], q_out[1])
+def declare(filename, in_q, out_q):
+    cpp_code = """
+    using namespace ROOT;
+    using namespace ROOT::VecOps;
+    #ifndef __CONIFER_H__
+    #define __CONIFER_H__
+    #include <ap_fixed.h>
+    #include <conifer.h>
 
 
+    typedef ap_fixed< <IN_Q_0>, <IN_Q_1>, AP_RND_CONV, AP_SAT> input_t;
+    typedef ap_fixed< <OUT_Q_0>, <OUT_Q_1>, AP_RND_CONV, AP_SAT> score_t;
+    conifer::BDT< input_t, score_t , false> bdt(<FILENAME>);
+
+
+    RVecF bdt_evaluate(const std::vector<std::variant<RVecF, RVecI, RVecD>> &input) {
+        int n_features = input.size();
+        int n_tkEle = std::visit([] (const auto& rvec){return rvec.size();}, input[0]);
+        RVecF res(n_tkEle);
+        for (int tkEle_idx = 0; tkEle_idx < n_tkEle; tkEle_idx++) {
+            std::vector<float> x(n_features);
+            std::vector<input_t> xt(n_features);
+            for (int feat_idx = 0; feat_idx < n_features; feat_idx++) {
+                x[feat_idx] = std::visit([tkEle_idx] (const auto& rvec){
+                    using T = std::decay_t<decltype(rvec)>;
+                    if constexpr (std::is_same_v<T, RVecF>) {
+                        return rvec[tkEle_idx];
+                    } else {
+                        return static_cast<float>(rvec[tkEle_idx]);
+                    }
+                }, input[feat_idx]);
+                std::transform(x.begin(), x.end(), std::back_inserter(xt),
+                   [](float xi) -> input_t { return (input_t) xi; });
+            }
+            res[tkEle_idx] = (bdt.decision_function(xt)[0]).to_float();
+        }
+        return res;
+    }
+    #endif
+    """
+    #add include path
+    this_dir = os.path.dirname(__file__)
+    ROOT.gInterpreter.AddIncludePath(this_dir)
+    ROOT.gInterpreter.AddIncludePath(os.path.join(this_dir, "../../../../utils/conifer"))
+    ROOT.gInterpreter.AddIncludePath(os.path.join(this_dir, "../../../../utils/conifer/conifer/backends/cpp/include"))
+    ROOT.gInterpreter.AddIncludePath(os.path.join(this_dir, "../../../../utils/conifer/conifer/externals"))
+    ROOT.gInterpreter.AddIncludePath(os.path.join(this_dir, "../../../../utils/conifer/conifer/externals/Vitis_HLS/simulation_headers/include"))
+    ROOT.gInterpreter.AddIncludePath(os.path.join(this_dir, "../../../../utils/conifer/conifer/externals/nlohmann/include"))
+
+    filename = os.path.abspath(filename)
+
+    cpp_code = cpp_code.replace("<FILENAME>", f'"{filename}"').replace("<IN_Q_0>", str(in_q[0])).replace("<IN_Q_1>", str(in_q[1])).replace("<OUT_Q_0>", str(out_q[0])).replace("<OUT_Q_1>", str(out_q[1]))
+    ROOT.gInterpreter.Declare(cpp_code)
+
+declare(conifermodel, in_q, out_q)
 def flow():
     tree = Tree()
     tree.add("noRegress", [
@@ -13,8 +75,17 @@ def flow():
                       Define("GenZd_mass", "GenZd_p4.mass()"),
                       Define("TkEleL2_originalPt", "TkEleL2_pt")])
 
+    #chi2rphi_bins = "RVecF({0.0, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0, 6.0, 10.0, 15.0, 20.0, 35.0, 60.0, 200.0})"
     tree.add("regressed", [
-        ReDefine("TkEleL2_pt", "TkEleL2_ptCorr")
+
+        Define("rescaled_idScore", "TkEleL2_idScore"),
+        Define("rescaled_caloEta", "-1 + abs(TkEleL2_caloEta)"),
+        Define("rescaled_caloTkAbsDphi", "-1 + TkEleL2_in_caloTkAbsDphi/pow(2,5)"),
+        Define("rescaled_hwTkChi2RPhi", "-1 + TkEleL2_in_hwTkChi2RPhi/pow(2,3)"), #TODO check
+        Define("rescaled_caloPt", "-1 + (TkEleL2_in_caloPt - 1)/pow(2,5)"),
+        Define("rescaled_caloSS", "-1 + TkEleL2_in_caloSS*2"),
+        Define("rescaled_caloTkPtRatio", "-1 + TkEleL2_in_caloTkPtRatio/pow(2,3)"),
+        ReDefine("TkEleL2_pt", f"TkEleL2_pt * ( {init_pred} + bdt_evaluate({{ {','.join([f'rescaled_{f}' for f in features_q])} }}))"),
     ], parent=["noRegress"])
 
 
@@ -51,19 +122,6 @@ def flow():
                 match_mask(DPCandidates_l2_caloEta, DPCandidates_l2_caloPhi, GenEl_caloeta[0], GenEl_calophi[0]))
         """),
         Cut(">=1 DPCandidate (matched to GenEl)", "nDPCandidates>0", plot="matchingGenCut"),
-        DefineSkimmedCollection("DPCandidates", mask="DPCandidates_dR>0.6"),
-        Cut("DPCand_dR06","nDPCandidates>0", plot="separation"),
-        DefineSkimmedCollection("DPCandidates", mask="""
-            (DPCandidates_l1_ptCorr/DPCandidates_l1_originalPt)<2. && (DPCandidates_l2_ptCorr/DPCandidates_l2_originalPt)<2.
-            && (DPCandidates_l1_ptCorr/DPCandidates_l1_originalPt)>0.5 && (DPCandidates_l2_ptCorr/DPCandidates_l2_originalPt)>0.5
-        """),
-        Cut("ptCorr_trim","nDPCandidates>0", plot="trimRatio"),
 
-
-
-        #Define("_argmaxdphi", "ArgMax(DPCandidates_dphi)"),
-        #DefineFromCollection("DPCandidate", "DPCandidates", index="_argmaxdphi", plot="B2B_selection"),
-        #Cut("CompositeIDCut", "DPCandidate_score_1>0 && DPCandidate_score_2>0", plot="ScoreCut"),
-        #Cut("dphiCut", "DPCandidate_dphi>2.5", plot="dphiCut"),
     ], parent=["regressed", "noRegress"])
     return tree

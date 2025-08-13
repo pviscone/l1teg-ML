@@ -79,3 +79,10 @@ RVec<bool> match_mask(
     return mask;
 }
 
+RVecF digitize(const RVecF &vec, const RVecF &bins) {
+    RVecF res(vec.size());
+    for (size_t i = 0; i < vec.size(); i++) {
+        res[i] = (float) ROOT::VecOps::ArgMin(abs(bins-vec[i]));
+    }
+    return res;
+}
