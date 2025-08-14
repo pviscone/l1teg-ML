@@ -1,5 +1,22 @@
 import os
 import numpy as np
+import sys
+import ROOT
+import mplhep as hep
+hep.style.use("CMS")
+cms10 = [
+    "#3f90da",
+    "#ffa90e",
+    "#bd1f01",
+    "#94a4a2",
+    "#832db6",
+    "#a96b59",
+    "#e76300",
+    "#b9ac70",
+    "#92dadd",
+    "#717581",
+]
+
 
 base_path = os.path.dirname(os.path.abspath(__file__)).replace("/eos/home-p", "/eos/user/p")
 
@@ -8,6 +25,23 @@ signal_train = os.path.join(base_path, "step0_ntuple/tempSigTrain/zsnap/era151Xv
 signal_test = os.path.join(base_path, "step0_ntuple/tempSigTest/zsnap/era151X_ptRegr_v0_A2/base_2_ptRatioMultipleMatch05/DoubleElectron_PU200.root")
 bkg_train = os.path.join(base_path, "step0_ntuple/tempMinBias/zsnap/era151X_ptRegr_v0_A2/base/MinBias.root")
 bkg_test = "root://eoscms.cern.ch//eos/cms/store/cmst3/group/l1tr/pviscone/l1teg/fp_ntuples/NuGunAllEta_PU200_test/FP/151X_ptRegr_v0_A2/*.root"
+
+
+sys.path.append(os.path.join(base_path, "./utils"))
+sys.path.append(os.path.join(base_path, "../../cmgrdf-cli/cmgrdf_cli/plots"))
+sys.path.append(os.path.join(base_path, "../../utils/BitHub"))
+sys.path.append(os.path.join(base_path, "../../utils/conifer"))
+sys.path.append(os.path.join(base_path, "../../utils/conifer/conifer/externals/"))
+sys.path.append(os.path.join(base_path, "../../utils/conifer/conifer/backends/cpp/include"))
+sys.path.append(os.path.join(base_path, "../../utils/conifer/conifer/externals/nlohmann/include"))
+sys.path.append(os.path.join(base_path, "../../utils/conifer/conifer/externals/nlohmann/include/nlohmann"))
+sys.path.append(os.path.join(base_path, "../../utils/conifer/conifer/externals/Vitis_HLS/simulation_headers/include"))
+ROOT.gInterpreter.AddIncludePath(os.path.join(base_path, "../../utils/conifer"))
+ROOT.gInterpreter.AddIncludePath(os.path.join(base_path, "../../utils/conifer/conifer/backends/cpp/include"))
+ROOT.gInterpreter.AddIncludePath(os.path.join(base_path, "../../utils/conifer/conifer/externals"))
+ROOT.gInterpreter.AddIncludePath(os.path.join(base_path, "../../utils/conifer/conifer/externals/Vitis_HLS/simulation_headers/include"))
+ROOT.gInterpreter.AddIncludePath(os.path.join(base_path, "../../utils/conifer/conifer/externals/nlohmann/include"))
+os.environ["PATH"] = "/data2/Xilinx/Vivado/2024.2/bin:/data2/Xilinx/Vitis_HLS/2024.2/bin:" + os.environ["PATH"]
 
 for f in [signal_train, signal_test, bkg_train]:
     if not os.path.exists(f):
@@ -69,23 +103,28 @@ features_q = [
     'caloTkPtRatio',
 ]
 
-xgbmodel=f"../models/xgb_model_L1_q{quant}_out{q_out[0]}_{q_out[1]}.json"
+xgbmodel=os.path.join(base_path, f"models/xgb_model_L1_q{quant}_out{q_out[0]}_{q_out[1]}.json")
 conifermodel = xgbmodel.replace("xgb", "conifer")
 init_pred = 512 * 2**-9  # Initial prediction value for the BDT model
 
 
 
-import sys
-sys.path.append("../../utils/conifer")
-import conifer
-xilinx_cfg = conifer.backends.xilinxhls.auto_config(granularity="full")
-xilinx_cfg["XilinxPart"] = "xcvu13p-flga2577-2-e"
-xilinx_cfg['InputPrecision'] = f"ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>"
-xilinx_cfg['ThresholdPrecision'] = f"ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>"
-xilinx_cfg['ScorePrecision'] =  f"ap_fixed<{q_out[0]},{q_out[1]},AP_RND_CONV,AP_SAT>"
-xilinx_cfg['ClockPeriod'] = 4.16666666
+xilinx_cfg = {
+    'Backend': 'xilinxhls',
+    'ProjectName': 'my_prj',
+    'OutputDir': 'my-conifer-prj',
+    'XilinxPart': 'xcvu13p-flga2577-2-e',
+    'ClockPeriod': 4.16666666,
+    'Unroll': True,
+    'AcceleratorConfig': None,
+    'InputPrecision': f'ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>',
+    'ThresholdPrecision': f'ap_fixed<{quant}, 1,AP_RND_CONV,AP_SAT>',
+    'ScorePrecision': f'ap_fixed<{q_out[0]}, {q_out[1]},AP_RND_CONV,AP_SAT>'}
 
-cpp_cfg = conifer.backends.cpp.auto_config()
-cpp_cfg["InputPrecision"] = f"ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>"
-cpp_cfg["ThresholdPrecision"] = f"ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>"
-cpp_cfg["ScorePrecision"] = f"ap_fixed<{q_out[0]},{q_out[1]},AP_RND_CONV,AP_SAT>"
+cpp_cfg = {'Backend': 'cpp',
+           'ProjectName': 'my_prj',
+           'OutputDir': 'my-conifer-prj',
+           'Precision': 'ap_fixed<18,8>',
+           'InputPrecision': f'ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>',
+           'ThresholdPrecision': f'ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>',
+           'ScorePrecision': f'ap_fixed<{q_out[0]}, {q_out[1]},AP_RND_CONV,AP_SAT>'}

@@ -95,7 +95,7 @@ def flow():
         Define("TkEleL2_rescaled_caloPt", "-1 + (TkEleL2_in_caloPt)/pow(2,5)"),
         Define("TkEleL2_rescaled_caloSS", "-1 + TkEleL2_in_caloSS*2"),
         Define("TkEleL2_rescaled_caloTkPtRatio", "-1 + TkEleL2_in_caloTkPtRatio/pow(2,3)"),
-        Define("out", f"( 1. + bdt_evaluate({{ {','.join([f'TkEleL2_rescaled_{f}' for f in features_q])} }}))"),
+        Define("out", f"( {init_pred} + bdt_evaluate({{ {','.join([f'TkEleL2_rescaled_{f}' for f in features_q])} }}))"),
         ReDefine("TkEleL2_pt", "TkEleL2_pt * out"),
     ], parent=["noRegress"])
 

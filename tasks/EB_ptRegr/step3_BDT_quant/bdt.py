@@ -1,13 +1,12 @@
 #%%
+# DO NOT CHANGE ORDER
 import sys
-sys.path.append("../utils")
 sys.path.append("..")
-sys.path.append("../../../utils/BitHub")
 sys.path = ["../utils/xgboost/python-package"] + sys.path
+import xgboost
 
 import numpy as np
 from sklearn.model_selection import train_test_split
-import xgboost
 from bithub.quantizers import xilinx
 from common import signal_train, bkg_train, eta_, genpt_, pt_, ptratio_dict, metric, quant, q_out, features_q, w, out_cut
 from plot_utils import plot_xgb_loss, plot_xgb_importance, plot_results,plot_bkg

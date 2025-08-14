@@ -1,20 +1,18 @@
 #%%
+# DO NOT CHANGE ORDER
 import sys
-import os
-sys.path.append("../utils")
 sys.path.append("..")
-sys.path.append("../../../utils/BitHub")
 sys.path.append("../../../utils/conifer")
 sys.path = ["../utils/xgboost/python-package"] + sys.path
-os.environ["PATH"] = "/data2/Xilinx/Vivado/2024.2/bin:/data2/Xilinx/Vitis_HLS/2024.2/bin:" + os.environ["PATH"]
-
 import conifer
 import xgboost as xgb
+from common import signal_test, eta_, genpt_, pt_, ptratio_dict, metric, quant, q_out, features_q, xgbmodel, conifermodel, xilinx_cfg
+
 import numpy as np
 
 from bithub.quantizers import xilinx
 from plot_utils import plot_results
-from common import signal_test, eta_, genpt_, pt_, ptratio_dict, metric, quant, q_out, features_q, xgbmodel, conifermodel, xilinx_cfg
+
 from file_utils import open_signal, quantize_features
 
 xgb_model = xgb.XGBRegressor()
