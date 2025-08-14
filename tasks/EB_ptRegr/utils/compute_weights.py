@@ -2,7 +2,6 @@
 import sys
 import numpy as np
 sys.path.append("../utils")
-from file_utils import openAsDataframe
 import hist
 
 # %%
@@ -59,12 +58,4 @@ def flat_w(arr, ref_arr, weight=1, bins=None):
     return res*len(ref_arr)/np.sum(res)
 
 
-#%%
-if __name__ == "__main__":
-    collection = "TkEle"
-    genpt_ = f"{collection}_Gen_pt"
-    pt_ = "TkEle_in_caloPt"
 
-    df = openAsDataframe("DoubleElectron_PU200.root", "TkEle")
-    new_df = cut_and_compute_weights(df, genpt_, pt_)
-# %%
