@@ -7,56 +7,26 @@ sys.path = ["../utils/xgboost/python-package"] + sys.path
 
 import numpy as np
 from sklearn.model_selection import train_test_split
-from file_utils import openAsDataframe
-from compute_weights import cut_and_compute_weights, flat_w
 import xgboost
-import pandas as pd
-from bithub.quantizers import mp_xilinx, xilinx
-from common import signal_train, bkg_train, eta_, genpt_, pt_, ptratio_dict, metric, quant, q_out, features_q, scale, w, out_cut
+from bithub.quantizers import xilinx
+from common import signal_train, bkg_train, eta_, genpt_, pt_, ptratio_dict, metric, quant, q_out, features_q, w, out_cut
 from plot_utils import plot_xgb_loss, plot_xgb_importance, plot_results,plot_bkg
 from xgb_loss import L1Metrics
+from file_utils import open_signal, open_bkg, merge_signal_bkg, quantize_features, quantize_target
 
-#? Open signal
-df_sig = openAsDataframe(signal_train, "TkEle")
-df_sig = df_sig[df_sig[pt_]>0]
-df_sig = scale(df_sig)
-df_sig["label"] = 1.
-df_sig = cut_and_compute_weights(df_sig, genpt_, pt_, ptcut = 0)
-
-#? Open background
-df_bkg = openAsDataframe(bkg_train, "TkEle")
-df_bkg = df_bkg[df_bkg[pt_]>0]
-df_bkg = scale(df_bkg)
-df_bkg["TkEle_Gen_pt"]= df_bkg[pt_].values
-df_bkg["TkEle_Gen_ptRatio"] = 1.
-df_bkg["label"] = 0.
-#%%
-flat_pt = True
-if flat_pt:
-    df_bkg["BALw"] = flat_w(df_bkg[pt_].values, df_sig[pt_].values, weight = df_sig["BALw"].values)
-else:
-    df_bkg["BALw"] = np.ones(len(df_bkg)) * len(df_sig) / len(df_bkg)
-
-df_bkg[w]=df_bkg["BALw"]
-
-#? Concatenate signal and background
-ks = list(set(df_sig.keys()).intersection(set(df_bkg.keys())))
-df = pd.concat([df_sig[ks], df_bkg[ks]])
-
-#? Apply quantization
-df_quant = pd.DataFrame(
-    mp_xilinx.mp_xilinx({k:df[k].values for k in features_q}, f'ap_fixed<{quant}, 1, "AP_RND_CONV", "AP_SAT">', convert="double")
-)
-for k in features_q:
-    df[k] = df_quant[k].values
-df["target"] = xilinx.convert(xilinx.ap_fixed(q_out[0], q_out[1], "AP_RND_CONV", "AP_SAT")(1/df["TkEle_Gen_ptRatio"].values), "double")
+#?Open dfs
+df_sig = open_signal(signal_train)
+df_bkg = open_bkg(bkg_train, df_sig, flat_pt=True)
+df = merge_signal_bkg(df_sig, df_bkg)
+df = quantize_features(df, features_q, quant)
 
 #? Split into train and test and mask the train
 df_train, df_test = train_test_split(df, test_size=0.2, random_state=42)
 
-#train_mask = np.bitwise_and( (df_train["target"] < out_cut- 1./2**(q_out[0]-q_out[1])) , df_train[pt_].values > 4)
-train_mask = (df_train["target"] < out_cut- 1./2**(q_out[0]-q_out[1]))
+train_mask = np.bitwise_and( (df_train["target"] < out_cut- 1./2**(q_out[0]-q_out[1])) , df_train[pt_].values >=2)
+#train_mask = (df_train["target"] < out_cut- 1./2**(q_out[0]-q_out[1]))
 df_train = df_train[train_mask]
+df_train = quantize_target(df_train, q_out)
 
 
 # %%
@@ -73,7 +43,7 @@ for k,dataframe in {"train":df_train, "test":df_test}.items():
         subsample=1.,
         colsample_bytree=1.0,
         alpha=0.,
-        min_split_loss=10,
+        min_split_loss=5,
         min_child_weight=100,
         n_estimators=10,
 
@@ -82,8 +52,8 @@ for k,dataframe in {"train":df_train, "test":df_test}.items():
         #?custom loss parameters
         #objective="reg:absoluteerror",
         objective="reg:l1loss",
-        alphaL1=0.98,
-        bkg_target=0.95,
+        alphaL1=0.99,
+        bkg_target=1.,
         cls_s=",".join(df_train["label"].values.astype(str).tolist()),
     )
 
@@ -98,7 +68,6 @@ for k,dataframe in {"train":df_train, "test":df_test}.items():
 
 plot_xgb_loss(l1_metric, savefolder=None)
 plot_xgb_importance(model, features_q, savefolder=None)
-
 print(len(model.get_booster().trees_to_dataframe()))
 #%%
 df_sig_test = df_test[df_test["label"].values==1]

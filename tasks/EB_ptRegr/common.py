@@ -21,8 +21,8 @@ ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio",
 
 metric = "L1"
 quant = 10
-out_cut = 2
-q_out = (11,2)
+out_cut = 4
+q_out = (12,3)
 
 def get_loss_and_eval_metric(metric):
     if metric == "L1":
@@ -69,6 +69,23 @@ features_q = [
     'caloTkPtRatio',
 ]
 
-xgbmodel="../models/xgb_model_L1_q10_out11_2.json"
+xgbmodel=f"../models/xgb_model_L1_q{quant}_out{q_out[0]}_{q_out[1]}.json"
 conifermodel = xgbmodel.replace("xgb", "conifer")
 init_pred = 512 * 2**-9  # Initial prediction value for the BDT model
+
+
+
+import sys
+sys.path.append("../../utils/conifer")
+import conifer
+xilinx_cfg = conifer.backends.xilinxhls.auto_config(granularity="full")
+xilinx_cfg["XilinxPart"] = "xcvu13p-flga2577-2-e"
+xilinx_cfg['InputPrecision'] = f"ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>"
+xilinx_cfg['ThresholdPrecision'] = f"ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>"
+xilinx_cfg['ScorePrecision'] =  f"ap_fixed<{q_out[0]},{q_out[1]},AP_RND_CONV,AP_SAT>"
+xilinx_cfg['ClockPeriod'] = 4.16666666
+
+cpp_cfg = conifer.backends.cpp.auto_config()
+cpp_cfg["InputPrecision"] = f"ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>"
+cpp_cfg["ThresholdPrecision"] = f"ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>"
+cpp_cfg["ScorePrecision"] = f"ap_fixed<{q_out[0]},{q_out[1]},AP_RND_CONV,AP_SAT>"

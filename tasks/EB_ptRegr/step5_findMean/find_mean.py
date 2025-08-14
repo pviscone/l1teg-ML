@@ -10,15 +10,11 @@ os.environ["PATH"] = "/data2/Xilinx/Vivado/2024.2/bin:/data2/Xilinx/Vitis_HLS/20
 
 import conifer
 import xgboost as xgb
-import json
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
-from file_utils import openAsDataframe
-from bithub.quantizers import mp_xilinx, xilinx
-from common import signal_test, genpt_, pt_, ptratio_dict, q_out, features_q, scale, xgbmodel, conifermodel
-
+from common import signal_test,features_q, xgbmodel, conifermodel, cpp_cfg, quant
+from file_utils import open_signal, quantize_features
 
 
 #%%
@@ -27,30 +23,14 @@ xgb_model.load_model(xgbmodel)
 
 
 #!---------------------- HLS Model----------------------!#
-cpp_cfg = conifer.backends.cpp.auto_config()
-cpp_cfg["InputPrecision"] = "ap_fixed<10,1,AP_RND_CONV,AP_SAT>"
-cpp_cfg["ThresholdPrecision"] = "ap_fixed<10,1,AP_RND_CONV,AP_SAT>"
-cpp_cfg["ScorePrecision"] = "ap_fixed<11,2,AP_RND_CONV,AP_SAT>"
-
 hls_model = conifer.model.load_model(conifermodel, new_config=cpp_cfg)
 print("Model converted")
 hls_model.compile()
 print("Model compiled")
 
-with open("conifer_conf.json", "w") as f:
-    f.write(json.dumps(cpp_cfg, indent=4))
-
 #%%
-df = openAsDataframe(signal_test, "TkEle")
-df = df[df[pt_]>0]
-df = scale(df)
-
-df_quant = pd.DataFrame(
-    mp_xilinx.mp_xilinx(df[features_q], 'ap_fixed<10, 1, "AP_RND_CONV", "AP_SAT">', convert="double")
-)
-for k in features_q:
-    df[k] = df_quant[k].values
-
+df = open_signal(signal_test)
+df = quantize_features(df, features_q, quant)
 
 # %%
 xgb_full=xgb_model.predict(df[features_q])
