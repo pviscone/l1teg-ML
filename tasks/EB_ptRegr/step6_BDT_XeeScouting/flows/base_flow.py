@@ -6,6 +6,7 @@ import os
 import sys
 
 sys.path.append("../")
+sys.path.append("../../../utils/conifer")
 from common import quant, q_out, features_q, conifermodel, init_pred
 
 in_q = (quant, 1)
@@ -25,13 +26,14 @@ def declare(filename, in_q, out_q):
     conifer::BDT< input_t, score_t , false> bdt(<FILENAME>);
 
 
-    RVecF bdt_evaluate(const std::vector<std::variant<RVecF, RVecI, RVecD>> &input) {
+    RVecF bdt_evaluate(const std::vector<std::variant<RVecF, RVecI, RVecD>> &input, bool debug=false) {
         int n_features = input.size();
         int n_tkEle = std::visit([] (const auto& rvec){return rvec.size();}, input[0]);
         RVecF res(n_tkEle);
         for (int tkEle_idx = 0; tkEle_idx < n_tkEle; tkEle_idx++) {
             std::vector<float> x(n_features);
-            std::vector<input_t> xt(n_features);
+            std::vector<input_t> xt;
+            xt.reserve(n_features);
             for (int feat_idx = 0; feat_idx < n_features; feat_idx++) {
                 x[feat_idx] = std::visit([tkEle_idx] (const auto& rvec){
                     using T = std::decay_t<decltype(rvec)>;
@@ -41,10 +43,18 @@ def declare(filename, in_q, out_q):
                         return static_cast<float>(rvec[tkEle_idx]);
                     }
                 }, input[feat_idx]);
-                std::transform(x.begin(), x.end(), std::back_inserter(xt),
+            }
+            std::transform(x.begin(), x.end(), std::back_inserter(xt),
                    [](float xi) -> input_t { return (input_t) xi; });
+            if(debug) {
+                for (int feat_idx = 0; feat_idx < n_features; feat_idx++) {
+                    std::cout << "Feature " << feat_idx << ": " << x[feat_idx] << " -> " << xt[feat_idx] << std::endl;
+                }
             }
             res[tkEle_idx] = (bdt.decision_function(xt)[0]).to_float();
+            if(debug) {
+                std::cout << "Decision function output for tkEle " << tkEle_idx << ": " << res[tkEle_idx] << std::endl << std::endl << std::endl;
+            }
         }
         return res;
     }
@@ -78,21 +88,22 @@ def flow():
     #chi2rphi_bins = "RVecF({0.0, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0, 6.0, 10.0, 15.0, 20.0, 35.0, 60.0, 200.0})"
     tree.add("regressed", [
 
-        Define("rescaled_idScore", "TkEleL2_idScore"),
-        Define("rescaled_caloEta", "-1 + abs(TkEleL2_caloEta)"),
-        Define("rescaled_caloTkAbsDphi", "-1 + TkEleL2_in_caloTkAbsDphi/pow(2,5)"),
-        Define("rescaled_hwTkChi2RPhi", "-1 + TkEleL2_in_hwTkChi2RPhi/pow(2,3)"), #TODO check
-        Define("rescaled_caloPt", "-1 + (TkEleL2_in_caloPt - 1)/pow(2,5)"),
-        Define("rescaled_caloSS", "-1 + TkEleL2_in_caloSS*2"),
-        Define("rescaled_caloTkPtRatio", "-1 + TkEleL2_in_caloTkPtRatio/pow(2,3)"),
-        ReDefine("TkEleL2_pt", f"TkEleL2_pt * ( {init_pred} + bdt_evaluate({{ {','.join([f'rescaled_{f}' for f in features_q])} }}))"),
+        Define("TkEleL2_rescaled_idScore", "TkEleL2_idScore"),
+        Define("TkEleL2_rescaled_caloEta", "-1 + abs(TkEleL2_caloEta)"),
+        Define("TkEleL2_rescaled_caloTkAbsDphi", "-1 + TkEleL2_in_caloTkAbsDphi/pow(2,5)"),
+        Define("TkEleL2_rescaled_hwTkChi2RPhi", "-1 + TkEleL2_in_hwTkChi2RPhi/pow(2,3)"), #TODO check
+        Define("TkEleL2_rescaled_caloPt", "-1 + (TkEleL2_in_caloPt)/pow(2,5)"),
+        Define("TkEleL2_rescaled_caloSS", "-1 + TkEleL2_in_caloSS*2"),
+        Define("TkEleL2_rescaled_caloTkPtRatio", "-1 + TkEleL2_in_caloTkPtRatio/pow(2,3)"),
+        Define("out", f"( 1. + bdt_evaluate({{ {','.join([f'TkEleL2_rescaled_{f}' for f in features_q])} }}))"),
+        ReDefine("TkEleL2_pt", "TkEleL2_pt * out"),
     ], parent=["noRegress"])
 
 
     tree.add("main_{leaf}",[
 
         #!------------------ TkEle ------------------!#
-        DefineSkimmedCollection("TkEleL2", mask="abs(TkEleL2_caloEta)<1.479"),
+        DefineSkimmedCollection("TkEleL2", mask="abs(TkEleL2_caloEta)<1.479 && TkEleL2_in_caloPt>0"),
         Define("TkEleMask", "TkEleL2_idScore>-0.3 && TkEleL2_pt>4", plot="noSelection"),
         DefineSkimmedCollection("TkEleL2", mask="TkEleMask"),
         Cut("2tkEle","nTkEleL2>=2", plot="2tkEle_pt3_score_m0p3"),
