@@ -57,10 +57,10 @@ def fill(array, nev):
 
 
 def pt_scaling(x):
-    return 1.08*x+3.39
+    return 1.07*x+3.84
 
 def ptcorr_scaling(x):
-    return 1.06*x+1.92
+    return 1.05*x+2.31
 
 
 h_pt_tight_on = fill(arr["LeadPtTight"], nev_tight)
