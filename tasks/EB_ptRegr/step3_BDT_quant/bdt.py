@@ -8,7 +8,7 @@ import xgboost
 import numpy as np
 from sklearn.model_selection import train_test_split
 from bithub.quantizers import xilinx
-from common import signal_train, bkg_train, eta_, genpt_, pt_, ptratio_dict, metric, quant, q_out, features_q, w, out_cut
+from common import signal_train, bkg_train, eta_, genpt_, pt_, ptratio_dict, metric, quant, q_out, features_q, w, out_cut, xgbmodel
 from plot_utils import plot_xgb_loss, plot_xgb_importance, plot_results,plot_bkg
 from xgb_loss import L1Metrics
 from file_utils import open_signal, open_bkg, merge_signal_bkg, quantize_features, quantize_target
@@ -30,7 +30,9 @@ df_train = quantize_target(df_train, q_out)
 
 # %%
 l1_metric={}
-for k,dataframe in {"train":df_train, "test":df_test}.items():
+#evals={"train":df_train, "test":df_test}
+evals = {"test":df_test}
+for k,dataframe in evals.items():
     eval_set = [(dataframe[features_q], dataframe["target"])]
 
     #with abserr remember to pass sample weight
@@ -38,22 +40,25 @@ for k,dataframe in {"train":df_train, "test":df_test}.items():
     print("Showing metrics for", k)
     model = xgboost.XGBRegressor(
         max_depth=6,
-        learning_rate=0.7,
+        learning_rate=0.8,
         subsample=1.,
         colsample_bytree=1.0,
         alpha=0.,
-        min_split_loss=5,
+        min_split_loss=0,
         min_child_weight=100,
-        n_estimators=10,
+        n_estimators=12,
 
         eval_metric=l1_metric[k].metrics,
 
         #?custom loss parameters
         #objective="reg:absoluteerror",
         objective="reg:l1loss",
-        alphaL1=0.99,
-        bkg_target=1.,
+        alphaL1=8,
+        betaL1=1.05,
+        bkg_target=0.975,
+        pt_thr=15,
         cls_s=",".join(df_train["label"].values.astype(str).tolist()),
+        pts_s=",".join(df_train[pt_].values.astype(str).tolist()),
     )
 
     eval_result = {}
@@ -76,7 +81,8 @@ df_sig_test[ptratio_dict["Regressed"]] = df_sig_test["model_output_quantized"].v
 
 plot_results(df_sig_test, ptratio_dict, genpt_, eta_, savefolder=f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}")
 plot_results(df_sig_test, ptratio_dict, genpt_, eta_, savefolder=f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}", eta_bins=np.array([0,1.479]), verbose=False)
-plot_bkg(model, df_test, features_q, pt_, what="all", savefolder=f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}", verbose=True, bins = np.arange(4,38,3))
+plot_bkg(model, df_test, features_q, pt_, what="all", savefolder=f"plots/plots{metric}_q{quant}_out{q_out[0]}_{q_out[1]}", verbose=False, bins = np.arange(4,38,3))
 
 # %%
-#model.save_model(f"../models/xgb_model_{metric}_q{quant}_out{q_out[0]}_{q_out[1]}.json")
+#model.save_model(xgbmodel)
+# %%

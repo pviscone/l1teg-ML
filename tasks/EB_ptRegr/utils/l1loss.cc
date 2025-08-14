@@ -52,18 +52,29 @@ namespace xgboost::obj {
 // for introduction of this module.
 struct L1LossParam : public XGBoostParameter<L1LossParam> {
   float alphaL1;
+  float betaL1;
+  float pt_thr;
   float bkg_target;
   std::string cls_s;
   std::vector<float> cls;
+  std::string pts_s;
+  std::vector<float> pts;
 
   DMLC_DECLARE_PARAMETER(L1LossParam) {
     DMLC_DECLARE_FIELD(alphaL1).set_default(1.0f).set_lower_bound(0.0f)
         .describe("Penalty term for pred>1 for the background class.");
+    DMLC_DECLARE_FIELD(betaL1).set_default(0.0f).set_lower_bound(0.0f)
+        .describe("Scaling of the pt penalty term for the background");
+    DMLC_DECLARE_FIELD(pt_thr).set_default(100.0f).set_lower_bound(0.0f)
+        .describe("Threshold of the pt term");
     DMLC_DECLARE_FIELD(bkg_target).set_default(1.0f).set_lower_bound(0.0f)
         .describe("Output target for the background class. ");
     DMLC_DECLARE_FIELD(cls_s)
         .set_default({}) // empty by default
         .describe("Class label vector comma separated string");
+    DMLC_DECLARE_FIELD(pts_s)
+        .set_default({}) // empty by default
+        .describe("pt vector comma separated string");
   }
 };
 
@@ -118,9 +129,13 @@ class L1Loss : public ObjFunction {
     param_.UpdateAllowUnknown(args);
     //split the cls_s string into a vector of strings
     std::vector<std::string> cls_s_split = common::Split(param_.cls_s, ',');
+    std::vector<std::string> pts_s_split = common::Split(param_.pts_s, ',');
+
     param_.cls.resize(cls_s_split.size());
+    param_.pts.resize(pts_s_split.size());
     for(int i=0; i< cls_s_split.size(); i++){
       param_.cls[i]= (float)std::stod(cls_s_split[i]);
+      param_.pts[i]= (float)std::stod(pts_s_split[i]);
     }
   }
   [[nodiscard]] ObjInfo Task() const override { return {ObjInfo::kRegression, true, true}; }
@@ -150,8 +165,10 @@ class L1Loss : public ObjFunction {
           };
           auto y = labels(i, j);
           auto cls = param_.cls[i];
-          auto hess = weight[i] * (cls + (1-cls) * param_.alphaL1);
-          auto grad = weight[i]  * (cls  * sign(predt(i, j) - y) + (1-cls) * param_.alphaL1 * (predt(i, j) > param_.bkg_target));
+          auto pt = param_.pts[i];
+
+          auto hess = weight[i] * (cls + (1-cls) *  (param_.alphaL1 + param_.betaL1 * std::min(pt,param_.pt_thr) ));
+          auto grad = weight[i]  * (cls  * sign(predt(i, j) - y) + (1-cls) * (param_.alphaL1 + param_.betaL1 * std::min(pt, param_.pt_thr)) * (predt(i, j) > param_.bkg_target));
           gpair(i, j) = GradientPair{grad, hess};
         });
   }

@@ -38,6 +38,7 @@ diff = xgb_full - cpp_out
 print(f"Max diff: {np.max(diff)}")
 print(f"Min diff: {np.min(diff)}")
 print(f"Mean diff: {np.mean(diff)}")
+print(f"Median diff: {np.median(diff)}")
 
 
 plt.hist(diff,bins=100)
