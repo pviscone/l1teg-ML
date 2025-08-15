@@ -126,5 +126,6 @@ ENV/
 !tasks/EB_ptRegr/step9_plots/**
 !tasks/EB_ptRegr/models
 !tasks/EB_ptRegr/models/*.json
+!tasks/EB_ptRegr/models/*.keras
 tasks/EB_ptRegr/step9_plots/**/index.php
 tasks/EB_ptRegr/step9_plots/**/*.pyc

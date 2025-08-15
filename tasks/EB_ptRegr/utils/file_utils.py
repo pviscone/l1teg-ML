@@ -7,7 +7,7 @@ import numpy as np
 import sys
 sys.path.append("..")
 sys.path.append("../../../utils/BitHub")
-from common import pt_, scale, genpt_, w
+from common import pt_, scale, genpt_, w, rename
 from bithub.quantizers import xilinx, mp_xilinx
 
 def openAsDataframe(path, collection):
@@ -19,10 +19,13 @@ def openAsDataframe(path, collection):
     return pd.DataFrame({key: ak.flatten(arrays[key]) for key in keys})
 # %%
 
-def open_signal(filepath):
+def open_signal(filepath, scale_clip=True):
     df_sig = openAsDataframe(filepath, "TkEle")
     df_sig = df_sig[df_sig[pt_]>0]
-    df_sig = scale(df_sig)
+    if scale_clip:
+        df_sig = scale(df_sig)
+    else:
+        df_sig = rename(df_sig)
     df_sig["label"] = 1.
     df_sig["target"] = 1/df_sig["TkEle_Gen_ptRatio"].values
     df_sig = cut_and_compute_weights(df_sig, genpt_, pt_, ptcut = 0)
@@ -30,10 +33,13 @@ def open_signal(filepath):
 
 
 
-def open_bkg(filepath, df_sig, flat_pt=True):
+def open_bkg(filepath, df_sig, flat_pt=True, scale_clip=True):
     df_bkg = openAsDataframe(filepath, "TkEle")
     df_bkg = df_bkg[df_bkg[pt_]>0]
-    df_bkg = scale(df_bkg)
+    if scale_clip:
+        df_bkg = scale(df_bkg)
+    else:
+        df_bkg = rename(df_bkg)
     df_bkg["TkEle_Gen_pt"]= df_bkg[pt_].values
     df_bkg["TkEle_Gen_ptRatio"] = 1.
     df_bkg["label"] = 0.

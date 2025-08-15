@@ -87,6 +87,19 @@ def scale(df):
     df["idScore"] = np.clip(df["TkEle_idScore"],-1,1)
     return df
 
+def rename(df):
+    df["caloEta"]= df["TkEle_caloEta"]
+    df["caloTkAbsDphi"] = df["TkEle_in_caloTkAbsDphi"]
+    df["hwTkChi2RPhi"] = df["TkEle_in_tkChi2RPhi"]
+    df["caloPt"] = df["TkEle_in_caloPt"]
+    df["caloRelIso"] = df["TkEle_in_caloRelIso"]
+    df["caloSS"] = df["TkEle_in_caloSS"]
+    df["tkPtFrac"] = df["TkEle_in_tkPtFrac"]
+    df["caloTkNMatch"] = df["TkEle_in_caloTkNMatch"]
+    df["caloTkPtRatio"] = df["TkEle_in_caloTkPtRatio"]
+    df["idScore"] = df["TkEle_idScore"]
+    return df
+
 features_q = [
     #'TkEle_in_caloStaWP',
     #'TkEle_in_caloTkAbsDeta',
