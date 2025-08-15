@@ -27,6 +27,12 @@ bkg_train = os.path.join(base_path, "step0_ntuple/tempMinBias/zsnap/era151X_ptRe
 bkg_test = "root://eoscms.cern.ch//eos/cms/store/cmst3/group/l1tr/pviscone/l1teg/fp_ntuples/NuGunAllEta_PU200_test/FP/151X_ptRegr_v0_A2/*.root"
 
 
+xee_hs = os.path.join(base_path, "step6_BDT_XeeScouting/tempXee/era151X_ptRegr_v0_A2/main_noRegress_4_matchingGenCut/DPCandidates_mass.root")
+xee_regr_hs = os.path.join(base_path, "step6_BDT_XeeScouting/tempXee/era151X_ptRegr_v0_A2/main_regressed_4_matchingGenCut/DPCandidates_mass.root")
+genZd_hs = os.path.join(base_path, "step6_BDT_XeeScouting/tempXee/era151X_ptRegr_v0_A2/main_noRegress_4_matchingGenCut/GenZd_mass.root")
+
+
+
 sys.path.append(os.path.join(base_path, "./utils"))
 sys.path.append(os.path.join(base_path, "../../cmgrdf-cli/cmgrdf_cli/plots"))
 sys.path.append(os.path.join(base_path, "../../utils/BitHub"))
@@ -50,7 +56,7 @@ for f in [signal_train, signal_test, bkg_train]:
 eta_ = "TkEle_caloEta"
 genpt_ = "TkEle_Gen_pt"
 pt_ = "TkEle_in_caloPt"
-ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio",
+ptratio_dict = {"No regression": "TkEle_Gen_ptRatio",
                 "Regressed": "TkEle_regressedPtRatio",}
 
 metric = "L1"
@@ -88,9 +94,10 @@ def scale(df):
     return df
 
 def rename(df):
+    tkRPhi_bins = np.array([0.0, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0, 6.0, 10.0, 15.0, 20.0, 35.0, 60.0, 200.0])
     df["caloEta"]= df["TkEle_caloEta"]
-    df["caloTkAbsDphi"] = df["TkEle_in_caloTkAbsDphi"]
-    df["hwTkChi2RPhi"] = df["TkEle_in_tkChi2RPhi"]
+    df["caloTkAbsDphi"] = df["TkEle_in_caloTkAbsDphi"]*3.14/720
+    df["hwTkChi2RPhi"] = np.digitize(df["TkEle_in_tkChi2RPhi"], tkRPhi_bins)-1
     df["caloPt"] = df["TkEle_in_caloPt"]
     df["caloRelIso"] = df["TkEle_in_caloRelIso"]
     df["caloSS"] = df["TkEle_in_caloSS"]
@@ -137,7 +144,7 @@ xilinx_cfg = {
 cpp_cfg = {'Backend': 'cpp',
            'ProjectName': 'my_prj',
            'OutputDir': 'my-conifer-prj',
-           'Precision': 'ap_fixed<18,8>',
+           'Precision': 'ap_fixed<18,8>', #????? Probably not used
            'InputPrecision': f'ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>',
            'ThresholdPrecision': f'ap_fixed<{quant},1,AP_RND_CONV,AP_SAT>',
            'ScorePrecision': f'ap_fixed<{q_out[0]}, {q_out[1]},AP_RND_CONV,AP_SAT>'}

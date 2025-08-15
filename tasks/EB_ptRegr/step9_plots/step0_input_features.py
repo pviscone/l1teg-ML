@@ -1,105 +1,121 @@
 #%%
-from common import feature_labels, features, train, feature_bins, target, target_label, target_bins, feature_map, target_map
-import uproot as up
-import awkward as ak
+import sys
+sys.path.append("..")
 import hist
 import matplotlib.pyplot as plt
 import mplhep
 import os
 import numpy as np
+from common import signal_train, bkg_train, features_q, w, pt_
+from file_utils import open_signal, open_bkg, merge_signal_bkg
+from labels import feature_labels, feature_map, feature_bins, target, target_map, target_label, target_bins
 
-os.makedirs("plots/step0_input_features/step0_input_features", exist_ok=True)
+basename = __file__.split("/")[-1].split(".")[0]
+savefolder = f"plots/{basename}/"
+os.makedirs(savefolder, exist_ok=True)
 
-file = up.open(train)["Events"]
+
+
+#?Open dfs
+df_sig = open_signal(signal_train, scale_clip=False)
+df_sig = df_sig[df_sig[pt_]>1]
+df_bkg = open_bkg(bkg_train, df_sig, flat_pt=True, scale_clip=False)
+df_bkg = df_bkg[df_bkg[pt_]>1]
+df = merge_signal_bkg(df_sig, df_bkg)
+
+
 
 #%%
+#! 1d Input Features
+def plot_features(dfs, features, ylim, log_scale, w=None, save=None):
+    if not isinstance(dfs, dict):
+        dfs = {"NONE":dfs}
+    if len(features) <= 6:
+        I1 = 2
+        I2 = 3
+    else:
+        I1 = 3
+        I2 = 3
+    fig, ax = plt.subplots(I1, I2, figsize=(15, 15))
+    for sample_name, df in dfs.items():
+        for i1 in range(I1):
+            for i2 in range(I2):
+                i = i1 * I2 + i2
+                if i >= len(features):
+                    ax[i1, i2].axis("off")
+                    continue
+                feat = features[i]
+                data = df[feat].values
+                lab = feature_labels[feat]
+                if w is not None:
+                    print(w)
+                    weight = df[w].values
+                else:
+                    weight = None
+                h = hist.Hist(feature_bins[feat], storage=hist.storage.Weight())
+                h.fill(feature_map[feat](data), weight=weight)
+                if i == len(features) - 1:
+                    lab_leg = sample_name
+                else:
+                    lab_leg = None
+                if len(dfs) == 1:
+                    histtype = 'fill'
+                else:
+                    histtype = 'step'
+                mplhep.histplot(h, ax=ax[i1, i2], density=True, histtype=histtype, linewidth=1.2, label=lab_leg)
+                if len(dfs) == 1:
+                    mplhep.histplot(h, ax=ax[i1, i2], density=True, color='black')
+                ax[i1, i2].set_xlabel(lab, fontsize=18)
+                if log_scale[i]:
+                    ax[i1, i2].set_yscale("log")
+                ax[i1, i2].tick_params(axis='x', labelsize=14)
+                ax[i1, i2].tick_params(axis='y', labelsize=12)
+                ax[i1,i2].set_ylim(ylim[i])
+                ax[i1,i2].tick_params(axis='y', which='minor', labelsize=12)
+                if i2 == 0:
+                    ax[i1, i2].set_ylabel("Density", fontsize=18)
+                ax[i1,i2].legend(loc='upper right', fontsize=14)
+    mplhep.cms.text("Phase-2 Simulation Preliminary", loc=0, ax=ax[0, 0], fontsize=20)
+    mplhep.cms.lumitext("PU 200 (14 TeV)", ax=ax[0, 2], fontsize=20)
+    if save:
+        fig.savefig(f"{savefolder}/step0_input_features_{save}.pdf", bbox_inches='tight')
+        fig.savefig(f"{savefolder}/step0_input_features_{save}.png", bbox_inches='tight')
+
 ylim = [
-    (0, 0.9),
+    (0, 4),
+    (0.001, 10),
     (1e-5, 900),
-    (0, 0.45),
-    (0, 0.015),
+    (0, 1.3),
+    (0.000001, 10),
     (1e-5, 0.9e2),
     (1e-6, 9),
 ]
 
+ylim_sig = ylim[1:]
+ylim_sig[2]=(0,0.4)
+
 log_scale = [
     False,
     True,
+    True,
     False,
-    False,
+    True,
     True,
     True,
 ]
 
-phys_map = [
-    lambda x: x*np.pi/720,
-    lambda x: x*np.pi/720,
-    lambda x: x,
-    lambda x: x,
-    lambda x: x,
-    lambda x: x
-]
 
+plot_features({"TkEle (Gen matched)":df_sig}, features_q[1:], ylim_sig, log_scale[1:], save="signal")
+plot_features({"TkEle (Gen matched)":df_sig, "Background":df_bkg}, features_q, ylim, log_scale, save="all")
+plot_features({"TkEle (Gen matched)":df_sig, "Background":df_bkg}, features_q, ylim, log_scale, w=w, save="all_weighted")
 
-feature_bins = {
-    "hwCaloEta": hist.axis.Regular(20, 0, 1.5),
-    "in_caloTkAbsDphi": hist.axis.Regular(30, 0, 0.3),
-    "in_hwTkChi2RPhi": hist.axis.Regular(30, 0, 15),
-    "in_caloPt": hist.axis.Regular(20, 0, 100),
-    "in_caloSS": hist.axis.Regular(30, 0.4, 1),
-    "in_caloTkPtRatio": hist.axis.Regular(70, 0, 40)
-}
-
-feature_labels = {
-    "hwCaloEta": r"$| \eta_{Calo} |$",
-    'in_caloTkAbsDphi': r"$| \Delta \phi_{caloTk} |$",
-    'in_hwTkChi2RPhi': r"$\chi^2_{tk}$ [a.u.]",
-    'in_caloPt': r"$p_T^{Calo}$ [GeV]",
-    'in_caloSS': r"$E_{2 \times 5}/E_{5 \times 5}$",
-    'in_caloTkPtRatio': r"$p_T^{Calo}/p_T^{Tk}$"
-}
-
-
-#! 1d Input Features
-fig, ax = plt.subplots(2, 3, figsize=(15, 10))
-for i1 in range(2):
-    for i2 in range(3):
-        i = i1 * 3 + i2
-        feat = features[i]
-        data = ak.flatten(file[f"TkEle_{feat}"].array())
-        lab = feature_labels[feat]
-        h = hist.Hist(feature_bins[feat])
-        h.fill(feature_map[feat](phys_map[i](data)))
-        if i1 == 1 and i2 == 2:
-            lab_leg = "DoubleElectron\n(Gen matched)"
-        else:
-            lab_leg = None
-        mplhep.histplot(h, ax=ax[i1, i2], density=True, histtype='fill', edgecolor='black', linewidth=1.2, label=lab_leg)
-        mplhep.histplot(h, ax=ax[i1, i2], density=True, color='black')
-        ax[i1, i2].set_xlabel(lab, fontsize=18)
-        if log_scale[i]:
-            ax[i1, i2].set_yscale("log")
-        ax[i1, i2].tick_params(axis='x', labelsize=14)
-        ax[i1, i2].tick_params(axis='y', labelsize=12)
-        ax[i1,i2].set_ylim(ylim[i])
-        ax[i1,i2].tick_params(axis='y', which='minor', labelsize=12)
-        if i2 == 0:
-            ax[i1, i2].set_ylabel("Density", fontsize=18)
-        if i==3:
-            import copy
-            h_pt=copy.deepcopy(h)
-ax[1,2].legend(loc='upper right', fontsize=14)
-mplhep.cms.text("Phase-2 Simulation Preliminary", loc=0, ax=ax[0, 0], fontsize=20)
-mplhep.cms.lumitext("PU 200", ax=ax[0, 2], fontsize=20)
-fig.savefig("plots/step0_input_features/step0_input_features.pdf", bbox_inches='tight')
-fig.savefig("plots/step0_input_features/step0_input_features.png", bbox_inches='tight')
 #%%
 #! 1d Target Feature
 fig, ax = plt.subplots()
-targ = ak.flatten(file[target].array())
+targ = df[target].values
 h = hist.Hist(target_bins)
 h.fill(target_map(targ))
-mplhep.histplot(h, ax=ax, density=True, histtype='fill', edgecolor='black', linewidth=1.2, label="DoubleElectron\n(Gen matched)")
+mplhep.histplot(h, ax=ax, density=True, histtype='fill', edgecolor='black', linewidth=1.2, label="TkEle (Gen matched)")
 mplhep.histplot(h, ax=ax, density=True, color='black')
 ax.set_xlabel(target_label)
 ax.set_ylabel("Density")
@@ -109,14 +125,14 @@ ax.set_ylabel("Density")
 ax.set_yscale("log")
 ax.legend(loc='upper right', fontsize=18)
 mplhep.cms.text("Phase-2 Simulation Preliminary", loc=0, ax=ax, fontsize=22)
-mplhep.cms.lumitext("PU 200", ax=ax, fontsize=22)
-fig.savefig("plots/step0_input_features/step0_target_feature.pdf", bbox_inches='tight')
-fig.savefig("plots/step0_input_features/step0_target_feature.png", bbox_inches='tight')
+mplhep.cms.lumitext("PU 200 (14 TeV)", ax=ax, fontsize=22)
+fig.savefig(f"{savefolder}/step0_target_feature.pdf", bbox_inches='tight')
+fig.savefig(f"{savefolder}/step0_target_feature.png", bbox_inches='tight')
 
 # %%
 
 
-#%%
+"""
 #! corrFactor vs pt
 if False:
     from common import minbias
@@ -143,7 +159,6 @@ if False:
     plt.title("Signal")
     plt.colorbar(label="Density")
 
-#%%
 if False:
     #! 2d Input Features
     targ = ak.flatten(file[target].array())
@@ -164,4 +179,4 @@ if False:
                 ax[i1, i2].set_ylabel(target_label, fontsize=18)
     mplhep.cms.text("Phase-2 Simulation Preliminary", loc=0, ax=ax[0, 0], fontsize=20)
     mplhep.cms.lumitext("PU 200", ax=ax[0, 2], fontsize=20)
-# %%
+"""

@@ -226,25 +226,25 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, per
             plt.setp(ax[0].get_xticklabels(), visible=False)
             plt.setp(ax[1].get_xticklabels(), visible=False)
         ax[0].axhline(1, color='gray', linestyle='-', alpha=0.5, zorder=99)
-        ax[0].set_title(f"$| \eta |$: [{eta_min},{eta_max}]")
+        ax[0].text(0, 1.6, f"${eta_min}< | \eta | < {eta_max}$")
         #ax[0].set_xlabel("Gen $p_{T}$ [GeV]")
-        ax[0].set_ylabel("Median TkEle $p_{T}$ / Gen $p_{T}$")
+        ax[0].set_ylabel("$p_{T}^{\\text{TkEle}}$ / $p_{T}^{\\text{GenEle}}$")
         for idx, label in enumerate(ptratio_dict.keys()):
             diff = centers[eta_idx][label][1:]-centers[eta_idx][label][:-1]
             diff = np.append(diff, diff[-1])
-            #ax[0].plot(centers[-1][label], medians[-1][label], marker='o', label=label, color=colors[idx])
+            ax[0].plot(centers[eta_idx][label]+idx*diff*0.25-diff/4, medians[-1][label], ".", marker='o', label=f"{label} Median", color=colors[idx], markeredgecolor='black', markeredgewidth=1, markersize=5, zorder=100)
+            ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.25-diff/4, medians[eta_idx][label],
+                                    yerr=[medians[eta_idx][label] - perc16s[eta_idx][label], perc84s[eta_idx][label] - medians[eta_idx][label]],
+                                    color=colors[idx], alpha=1, label=f"{label} 16/84%", linewidth=3, fmt="o", markersize=0)
             ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.25-diff/4, medians[eta_idx][label],
                         yerr=[medians[eta_idx][label] - perc5s[eta_idx][label], perc95s[eta_idx][label] - medians[eta_idx][label]],
                         color=colors[idx], alpha=0.7, label=f"{label} 5/95%", fmt = "o", markersize=0)
-            ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.25-diff/4, medians[eta_idx][label],
-                        yerr=[medians[eta_idx][label] - perc16s[eta_idx][label], perc84s[eta_idx][label] - medians[eta_idx][label]],
-                        color=colors[idx], alpha=1, label=f"{label} 16/84%", linewidth=3, markeredgecolor='black', markeredgewidth=1, markersize=5, marker='o', fmt = "o")
             for ii in range(len(centers[eta_idx][label])):
                 ax[0].axvline(centers[eta_idx][label][ii]-diff[ii]/2, alpha=0.05, color="gray", linestyle=':')
             if verbose:
                 ax[1].step(centers[eta_idx][label], residuals[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
                 ax[2].step(centers[eta_idx][label], variances[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
-        ax[0].legend(fontsize=18, loc='lower right')
+        ax[0].legend(fontsize=13, loc='lower right')
         ax[0].set_ylim(0.3,1.7)
         if verbose:
             ax[1].set_ylim(0, 2.9)
@@ -254,8 +254,8 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, per
             ax[2].set_ylabel(r"$\sum \frac{\left( L1 p_{T}-Gen p_{T} \right)^2]}{N-1}$", fontsize=13)
         else:
             ax[0].set_xlabel("Gen $p_{T}$ [GeV]")
-        hep.cms.text("Phase-2 Simulation Preliminary", ax=ax[0], loc=2)
-        hep.cms.lumitext("PU 200", ax=ax[0])
+        hep.cms.text("Phase-2 Simulation Preliminary", ax=ax[0], loc=0, fontsize=22)
+        hep.cms.lumitext("PU 200 (14 TeV)", ax=ax[0], fontsize=22)
         fig.savefig(f"{savefolder}/aresponse_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.pdf")
         fig.savefig(f"{savefolder}/aresponse_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.png")
         plt.close(fig)
@@ -471,9 +471,9 @@ def resolution_plot(ptratio_dict, eta_bins, centers, width, variances=None, n=No
     for eta_idx, (eta_min, eta_max) in enumerate(zip(eta_bins[:-1], eta_bins[1:])):
         fig, ax = plt.subplots()
         ax.axhline(0, color='black', linestyle=':', alpha=0.3)
-        ax.set_title(f"$| \eta |$: [{eta_min},{eta_max}]")
+        ax.text(0, 0.28, f"${eta_min} < | \eta | < {eta_max}$")
         ax.set_xlabel("Gen $p_{T}$ [GeV]")
-        ax.set_ylabel("$\sigma_{eff}$(TkEle $p_{T}$ / Gen $p_{T}$)")
+        ax.set_ylabel("$\sigma_{eff}$($p_{T}^{\\text{TkEle}}$ / $p_{T}^{\\text{GenEle}}$)")
         for idx, label in enumerate(ptratio_dict.keys()):
             #width = (perc84s[eta_idx][label] - perc16s[eta_idx][label])# / centers[eta_idx][label]
             diff=(centers[eta_idx][label][1:]-centers[eta_idx][label][:-1])/2
@@ -485,8 +485,8 @@ def resolution_plot(ptratio_dict, eta_bins, centers, width, variances=None, n=No
         ax.legend()
         ax.set_ylim(0, 0.3)
         #ax.set_yscale("log")
-        hep.cms.text("Phase-2 Simulation Preliminary", ax=ax, loc=2)
-        hep.cms.lumitext("PU 200", ax=ax)
+        hep.cms.text("Phase-2 Simulation Preliminary", ax=ax, loc=0, fontsize=22)
+        hep.cms.lumitext("PU 200 (14 TeV)", ax=ax, fontsize=22)
         fig.savefig(f"{savefolder}/resolution_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.pdf")
         fig.savefig(f"{savefolder}/resolution_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.png")
         plt.close(fig)

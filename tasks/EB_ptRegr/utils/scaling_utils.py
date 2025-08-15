@@ -78,13 +78,15 @@ def derive_scaling(pt_dict, gen, pt_cuts=None, bins=None, verbose=False, savefol
                 ax.plot(y95[pt_label][-1], 0.95, "*", color="white", markeredgecolor=cms10[idx], markersize=20, zorder=999, )
 
         if verbose:
-            ax.axvline(cut, color="black", linestyle="--", linewidth=1, alpha=0.5, label=f"Online pT cut: {cut:.2f} GeV")
+            ax.axvline(cut, color="black", linestyle="--", linewidth=1, alpha=0.5, label=f"Online $p_T$ cut: {cut:.2f} GeV")
             ax.axhline(0.95, color="black", linestyle=":", linewidth=1, alpha = 0.3)
             ax.set_xlim(cut-10, cut+20)
             ax.set_ylim(-0.05,1.09)
             ax.set_xlabel("Gen pT [GeV]")
-            ax.set_ylabel("Efficiency pT [GeV]")
+            ax.set_ylabel("Efficiency")
             ax.legend(fontsize=14)
+            mplhep.cms.text("Phase-2 Simulation Preliminary", ax=ax, fontsize=22, loc=0)
+            mplhep.cms.lumitext("PU 200 (14 TeV)", ax=ax, fontsize=22)
             if savefolder:
                 fig.savefig(f"{savefolder}/turn_on_{cut:.2f}.pdf", bbox_inches="tight")
                 fig.savefig(f"{savefolder}/turn_on_{cut:.2f}.png", bbox_inches="tight")
@@ -98,9 +100,9 @@ def derive_scaling(pt_dict, gen, pt_cuts=None, bins=None, verbose=False, savefol
         ax.plot(pt_cuts, f(pt_cuts, *popt), color=cms10[idx],alpha=0.3, label=f"{pt_label} scaling: {popt[0]:.2f} $p_T^{{L1}}$ + {popt[1]:.2f} GeV", linewidth=3)
     ax.legend(fontsize=16)
     ax.set_xlabel("Online pT cut [GeV]")
-    ax.set_ylabel("95% efficiency pT [GeV]")
-    mplhep.cms.text("Phase-2 Simulation Preliminary", ax=ax)
-    mplhep.cms.lumitext("PU 200", ax=ax)
+    ax.set_ylabel("$p_T^{95\%}$ [GeV]")
+    mplhep.cms.text("Phase-2 Simulation Preliminary", ax=ax, fontsize=22)
+    mplhep.cms.lumitext("PU 200 (14 TeV)", ax=ax, fontsize=22)
     if savefolder:
         fig.savefig(f"{savefolder}/online_to_offline_scaling.pdf", bbox_inches="tight")
         fig.savefig(f"{savefolder}/online_to_offline_scaling.png", bbox_inches="tight")

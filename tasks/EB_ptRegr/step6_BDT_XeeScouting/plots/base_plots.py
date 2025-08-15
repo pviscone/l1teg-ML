@@ -22,7 +22,7 @@ plots={
         Hist("DPCandidates_dz", "DPCandidates_dz"),
         Hist("DPCandidates_score_LeadEle", "DPCandidates_l1_idScore"),
         Hist("DPCandidates_score_SubLeadEle", "DPCandidates_l2_idScore"),
-        Hist("DPCandidates_mass", "DPCandidates_mass", ylim=(0,0.85)),
+        Hist("DPCandidates_mass", "DPCandidates_mass", rebin=100, ylim=(0,0.85)),
         Hist("DPCandidates_pt", "DPCandidates_pt"),
         Hist("DPCandidates_l1_ptRatio", "DPCandidates_l1_ptCorr/DPCandidates_l1_originalPt"),
         Hist("DPCandidates_l2_ptRatio", "DPCandidates_l2_ptCorr/DPCandidates_l2_originalPt"),

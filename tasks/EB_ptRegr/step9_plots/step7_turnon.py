@@ -1,115 +1,54 @@
-#%%
-import sys
-import os
-os.makedirs("plots/step7_turnon", exist_ok=True)
-sys.path.append("../../../cmgrdf-cli/cmgrdf_cli/plots")
-
-from plotters import TEfficiency
-
-import uproot as up
+# %%
 import hist
-import numpy as np
-import matplotlib.pyplot as plt
-import mplhep
-import awkward as ak
-from common import testA2, doubleEle
+import sys
 import ROOT
-ROOT.EnableImplicitMT()
+sys.path.append("..")
+from common import pt_, genpt_, conifermodel, signal_test, cpp_cfg, features_q, init_pred
+from file_utils import open_signal
+import conifer
+import matplotlib.pyplot as plt
+df = open_signal(signal_test)
+df = df[(df["TkEle_hwQual"].values & 2) == 2 ]
 
-def array(f, key):
-    return ak.flatten(f[key].array()).to_numpy()
+model = conifer.model.load_model(conifermodel, new_config=cpp_cfg)
+model.compile()
+df["ptCorr"] = (init_pred + model.decision_function(df[features_q].values)[:, 0])*df[pt_].values
 
-mplhep.style.use("CMS")
+den_h = hist.Hist(hist.axis.Regular(200, 3, 80))
+den_h.fill(df[genpt_].values)
 
-
-
-cms10 = [
-    "#3f90da",
-    "#ffa90e",
-    "#bd1f01",
-    "#94a4a2",
-    "#832db6",
-    "#a96b59",
-    "#e76300",
-    "#b9ac70",
-    "#92dadd",
-    "#717581",
-]
-
-
-
+rdf = ROOT.RDataFrame("Events", "/eos/cms/store/cmst3/group/l1tr/pviscone/l1teg/fp_ntuples/DoubleElectron_FlatPt-1To100_PU200/FP/151X_ptRegr_v0_A2/*.root", ["GenEl_caloeta","GenEl_pt"])
+rdf = rdf.Redefine("GenEl_pt", "GenEl_pt[abs(GenEl_caloeta)<1.479]").Filter("GenEl_pt.size()>0").Define("GenEl_pt0", "GenEl_pt[0]").Define("GenEl_pt1", "GenEl_pt[1]")
+arr = rdf.AsNumpy(["GenEl_pt0", "GenEl_pt1"])
 
 #%%
-
-
-df = ROOT.RDataFrame("Events", doubleEle, ["GenEl_caloeta","GenEl_pt"])
-df = df.Redefine("GenEl_pt", "GenEl_pt[abs(GenEl_caloeta)<1.479]").Filter("GenEl_pt.size()>0").Define("GenEl_pt0", "GenEl_pt[0]").Define("GenEl_pt1", "GenEl_pt[1]")
-arr = df.AsNumpy(["GenEl_pt0", "GenEl_pt1"])
-
-gen_h = hist.Hist(hist.axis.Regular(100, 1, 101))
+gen_h = hist.Hist(hist.axis.Regular(200, 3, 80))
 gen_h.fill(arr["GenEl_pt0"])
 gen_h.fill(arr["GenEl_pt1"])
+den_h=gen_h
 
-f = up.open(testA2)["Events"]
+def pt_descaling(x):
+    return (x-3.84)/1.07
 
-ptCorr=array(f,"TkEle_ptCorr")
-pt=array(f,"TkEle_pt")
-gen=array(f,"TkEle_Gen_pt")
-
-tight_mask = array(f, "TkEle_hwQual") & 2 == 2
-
-den_h = hist.Hist(hist.axis.Regular(100,1,101))
-den_h.fill(array(f,"TkEle_Gen_pt"))
-#%%
-cuts = {
-    "tight":
-        (37, 40),
-    "loose":
-        (55, 63)
-}
-
-def ptcorr_scaling(x):
-    return 1.07*x+2.02
-
-def pt_scaling(x):
-    return 1.07*x+4.23
+def ptcorr_descaling(x):
+    return (x-2.31)/1.05
 
 
-def plot_eff(den, lab, cuts, text=None):
-    eff = TEfficiency(legend_kwargs={"loc": "center right", "fontsize":16}, xlabel=r"Gen $p_{T} [GeV]$", xlim=(20,100), cmstext="Phase-2 Simulation Preliminary", lumitext="PU 200", grid = False, ylim=(-0.05, 1.1))
+fig, ax = plt.subplots()
+pt_h = hist.Hist(hist.axis.Regular(200, 3, 80))
+pt_h.fill(df[df[pt_].values > pt_descaling(25)][genpt_].values)
 
-    if "loose" in cuts:
-        pt_h = hist.Hist(hist.axis.Regular(100,1,101))
-        pt_h.fill(gen[pt_scaling(pt)>cuts["loose"][0]])
+ptCorr_h = hist.Hist(hist.axis.Regular(200, 3, 80))
+ptCorr_h.fill(df[df["ptCorr"].values > ptcorr_descaling(25)][genpt_].values)
 
-        ptCorr_h = hist.Hist(hist.axis.Regular(100,1,101))
-        ptCorr_h.fill(gen[ptcorr_scaling(ptCorr)>cuts["loose"][1]])
+print(f"online pt 25 {pt_descaling(25):.2f}")
+print(f"online ptCorr 25 {ptcorr_descaling(25):.2f}")
 
-    pt_h_tight = hist.Hist(hist.axis.Regular(100,1,101))
-    pt_h_tight.fill(gen[tight_mask][pt_scaling(pt[tight_mask])>cuts["tight"][0]])
-
-    ptCorr_h_tight = hist.Hist(hist.axis.Regular(100,1,101))
-    ptCorr_h_tight.fill(gen[tight_mask][ptcorr_scaling(ptCorr[tight_mask])>cuts["tight"][1]])
-
-    if "loose" in cuts:
-        eff.add(ptCorr_h, den, label=f"Offline $p_T^{{corr}}$>{cuts['loose'][1]} GeV", linestyle="--")
-        eff.add(pt_h, den, label=f"Offline $p_T$>{cuts['loose'][0]} GeV", linestyle="-")
-
-    eff.add(ptCorr_h_tight, den, label=f"Offline $p_T^{{corr}}$>{cuts['tight'][1]} GeV (Tight)", linestyle="--")
-    eff.add(pt_h_tight, den, label=f"Offline $p_T$>{cuts['tight'][0]} GeV (Tight)", linestyle="-")
-
-    if text:
-        eff.ax.text(0.05, 0.95, text, transform=eff.ax.transAxes, fontsize=20, color="black", weight="bold")
-    eff.save(f"plots/step7_turnon/step7_turnon_efficiency_{lab}.pdf")
-    eff.save(f"plots/step7_turnon/step7_turnon_efficiency_{lab}.png")
-
-
-plot_eff(den_h, "18khz_matched", cuts, text="Fixed Rate (18 kHz)")
-plot_eff(gen_h, "18khz_all", cuts, text="Fixed Rate (18 kHz)")
-
-cuts_fixed = {
-    "tight":
-        (36, 36),
-}
-plot_eff(den_h, "36_matched", cuts_fixed)
-plot_eff(gen_h, "36_all", cuts_fixed)
+eff = pt_h / den_h
+effCorr = ptCorr_h/den_h
+x = eff.axes[0].centers
+ax.step(x, eff.values(), label="Non-Regressed", color="red")
+ax.step(x, effCorr.values(), label="Regressed", color="blue")
+ax.legend()
+ax.set_xlabel("Gen pT")
+# %%

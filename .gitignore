@@ -129,3 +129,5 @@ ENV/
 !tasks/EB_ptRegr/models/*.keras
 tasks/EB_ptRegr/step9_plots/**/index.php
 tasks/EB_ptRegr/step9_plots/**/*.pyc
+OLD/
+my-conifer-prj

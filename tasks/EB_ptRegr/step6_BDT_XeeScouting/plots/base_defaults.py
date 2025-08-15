@@ -17,7 +17,7 @@ cmgrdf_cli.defaults.name_defaults = OrderedDict({
         label="($1) ($2) $p_{T}$ [GeV]",
     ),
     "(.*)_mass(.*)": dict(
-        bins=(60,0.5,40.5),
+        bins=(6000,0.5,40.5),
         label="($1) ($2) m [GeV]",
     ),
     "(.*)_dphi(.*)": dict(
