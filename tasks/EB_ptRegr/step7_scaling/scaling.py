@@ -25,6 +25,6 @@ pt = df[pt_].values
 ptCorr = df["ptCorr"].values
 
 #%%
-pt_cuts = np.arange(15, 56, 10)
+pt_cuts = np.arange(10, 31, 5)
 cuts, y95 = derive_scaling({"Non-Regressed": pt, "Regressed": ptCorr}, gen, pt_cuts=pt_cuts, verbose=False, savefolder="plots")
 # %%

@@ -50,52 +50,21 @@ def effSigmaInterval(hist):
 
     return best_interval
 
+def smallest_interval_68(arr):
+    arr = np.sort(arr)
+    n = len(arr)
+    k = int(np.floor(0.68 * n))  # number of points to include
 
-def get_bootstrap_uncertainty(original_hist, num_bootstraps=1000):
-    """
-    Calculates the uncertainty of the effSigmaInterval width using the
-    bootstrap method.
+    # Sliding window over sorted values
+    min_width = np.inf
+    best_interval = (None, None)
 
-    Args:
-        original_hist (hist.Hist): The original 1D histogram.
-        num_bootstraps (int): The number of bootstrap samples to generate.
+    for i in range(n - k):
+        low = arr[i]
+        high = arr[i + k]
+        width = high - low
+        if width < min_width:
+            min_width = width
+            best_interval = (low, high)
 
-    Returns:
-        tuple: A tuple (mean_width, std_dev_width, confidence_interval).
-    """
-    original_counts = original_hist.values()
-    widths = []
-
-    # Get the original width to compare
-    original_interval = effSigmaInterval(original_hist)
-    original_width = original_interval[1] - original_interval[0]
-
-    for _ in range(num_bootstraps):
-        # Generate new bin counts by drawing from a Poisson distribution
-        # with the original counts as the mean. This simulates statistical
-        # fluctuations in the histogram.
-        bootstrapped_counts = poisson.rvs(original_counts)
-
-        # Create a new histogram with the bootstrapped counts
-        bootstrapped_hist = hist.Hist(original_hist.axes[0], data=bootstrapped_counts)
-
-        # Calculate the interval for the bootstrapped histogram
-        bootstrapped_interval = effSigmaInterval(bootstrapped_hist)
-
-        # If an interval was found, calculate its width and store it
-        if bootstrapped_interval:
-            width = bootstrapped_interval[1] - bootstrapped_interval[0]
-            widths.append(width)
-
-    if not widths:
-        return (original_width, 0, (original_width, original_width))
-
-    # Calculate the mean, standard deviation, and 68% confidence interval
-    mean_width = np.mean(widths)
-    std_dev_width = np.std(widths)
-
-    # Calculate the 16th and 84th percentiles for the 68% confidence interval
-    lower_bound = np.percentile(widths, 16)
-    upper_bound = np.percentile(widths, 84)
-
-    return std_dev_width
+    return best_interval

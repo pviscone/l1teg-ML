@@ -11,7 +11,7 @@ from common import quant, q_out, features_q, conifermodel, init_pred
 
 in_q = (quant, 1)
 out_q = (q_out[0], q_out[1])
-def declare(filename, in_q, out_q):
+def declare(in_q, out_q):
     cpp_code = """
     using namespace ROOT;
     using namespace ROOT::VecOps;
@@ -23,10 +23,10 @@ def declare(filename, in_q, out_q):
 
     typedef ap_fixed< <IN_Q_0>, <IN_Q_1>, AP_RND_CONV, AP_SAT> input_t;
     typedef ap_fixed< <OUT_Q_0>, <OUT_Q_1>, AP_RND_CONV, AP_SAT> score_t;
-    conifer::BDT< input_t, score_t , false> bdt(<FILENAME>);
 
 
-    RVecF bdt_evaluate(const std::vector<std::variant<RVecF, RVecI, RVecD>> &input, bool debug=false) {
+    RVecF bdt_evaluate(std::string filename, const std::vector<std::variant<RVecF, RVecI, RVecD>> &input, bool debug=false) {
+        conifer::BDT< input_t, score_t , false> bdt(filename);
         int n_features = input.size();
         int n_tkEle = std::visit([] (const auto& rvec){return rvec.size();}, input[0]);
         RVecF res(n_tkEle);
@@ -69,12 +69,11 @@ def declare(filename, in_q, out_q):
     ROOT.gInterpreter.AddIncludePath(os.path.join(this_dir, "../../../../utils/conifer/conifer/externals/Vitis_HLS/simulation_headers/include"))
     ROOT.gInterpreter.AddIncludePath(os.path.join(this_dir, "../../../../utils/conifer/conifer/externals/nlohmann/include"))
 
-    filename = os.path.abspath(filename)
 
-    cpp_code = cpp_code.replace("<FILENAME>", f'"{filename}"').replace("<IN_Q_0>", str(in_q[0])).replace("<IN_Q_1>", str(in_q[1])).replace("<OUT_Q_0>", str(out_q[0])).replace("<OUT_Q_1>", str(out_q[1]))
+    cpp_code = cpp_code.replace("<IN_Q_0>", str(in_q[0])).replace("<IN_Q_1>", str(in_q[1])).replace("<OUT_Q_0>", str(out_q[0])).replace("<OUT_Q_1>", str(out_q[1]))
     ROOT.gInterpreter.Declare(cpp_code)
 
-declare(conifermodel, in_q, out_q)
+declare(in_q, out_q)
 def flow():
     tree = Tree()
     tree.add("noRegress", [
@@ -95,7 +94,7 @@ def flow():
         Define("TkEleL2_rescaled_caloPt", "-1 + (TkEleL2_in_caloPt)/pow(2,5)"),
         Define("TkEleL2_rescaled_caloSS", "-1 + TkEleL2_in_caloSS*2"),
         Define("TkEleL2_rescaled_caloTkPtRatio", "-1 + TkEleL2_in_caloTkPtRatio/pow(2,3)"),
-        Define("out", f"( {init_pred} + bdt_evaluate({{ {','.join([f'TkEleL2_rescaled_{f}' for f in features_q])} }}))"),
+        Define("out", f"( {init_pred} + bdt_evaluate(\"{conifermodel}\", {{ {','.join([f'TkEleL2_rescaled_{f}' for f in features_q])} }}))"),
         ReDefine("TkEleL2_pt", "TkEleL2_pt * out"),
     ], parent=["noRegress"])
 

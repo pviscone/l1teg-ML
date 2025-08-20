@@ -4,6 +4,7 @@ import mplhep as hep
 import numpy as np
 import hist
 import os
+from metrics import smallest_interval_68
 
 hep.style.use("CMS")
 
@@ -19,6 +20,8 @@ colors=[
     "#92dadd",
     "#717581",
 ]
+
+markers = ["s", "P", "X"]
 
 def plot_distributions(df, features = None, weight=None, savefolder="plots/distributions"):
     if features is None:
@@ -214,6 +217,14 @@ def plot_ptratio_distributions_n(df,
 
 
 def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, perc16s, perc84s, residuals, variances, verbose=True, savefolder="plots"):
+    legend_order = []
+    counter=0
+    for i in range(2*len(ptratio_dict)):
+        if i%2==0:
+            legend_order.append(counter)
+        else:
+            legend_order.append(counter+len(ptratio_dict))
+            counter+=1
     os.makedirs(savefolder, exist_ok=True)
 
     for eta_idx, (eta_min, eta_max) in enumerate(zip(eta_bins[:-1], eta_bins[1:])):
@@ -226,26 +237,34 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, per
             plt.setp(ax[0].get_xticklabels(), visible=False)
             plt.setp(ax[1].get_xticklabels(), visible=False)
         ax[0].axhline(1, color='gray', linestyle='-', alpha=0.5, zorder=99)
-        ax[0].text(0, 1.6, f"${eta_min}< | \eta | < {eta_max}$")
+        ax[0].text(0, 1.3, f"${eta_min}< | \eta | < {eta_max}$")
         #ax[0].set_xlabel("Gen $p_{T}$ [GeV]")
         ax[0].set_ylabel("$p_{T}^{\\text{TkEle}}$ / $p_{T}^{\\text{GenEle}}$")
         for idx, label in enumerate(ptratio_dict.keys()):
             diff = centers[eta_idx][label][1:]-centers[eta_idx][label][:-1]
             diff = np.append(diff, diff[-1])
-            ax[0].plot(centers[eta_idx][label]+idx*diff*0.25-diff/4, medians[-1][label], ".", marker='o', label=f"{label} Median", color=colors[idx], markeredgecolor='black', markeredgewidth=1, markersize=5, zorder=100)
-            ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.25-diff/4, medians[eta_idx][label],
+            median_label=label.replace(' ',r'\ ')
+            ax[0].plot(centers[eta_idx][label]+idx*diff*0.3-diff/4, medians[-1][label], ".", marker=markers[idx], label=f"$\\bf{{{median_label}}}$\nMedian", color=colors[idx], markeredgecolor='black', markeredgewidth=1, markersize=9, zorder=10)
+            """
+            ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.3-diff/4, medians[eta_idx][label],
                                     yerr=[medians[eta_idx][label] - perc16s[eta_idx][label], perc84s[eta_idx][label] - medians[eta_idx][label]],
                                     color=colors[idx], alpha=1, label=f"{label} 16/84%", linewidth=3, fmt="o", markersize=0)
-            ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.25-diff/4, medians[eta_idx][label],
+            """
+            ax[0].errorbar(centers[eta_idx][label]+idx*diff*0.3-diff/4, medians[eta_idx][label],
                         yerr=[medians[eta_idx][label] - perc5s[eta_idx][label], perc95s[eta_idx][label] - medians[eta_idx][label]],
-                        color=colors[idx], alpha=0.7, label=f"{label} 5/95%", fmt = "o", markersize=0)
+                        color=colors[idx], alpha=1, label="5/95% Quantiles", fmt = "o", markersize=0, linewidth=2)
+
             for ii in range(len(centers[eta_idx][label])):
                 ax[0].axvline(centers[eta_idx][label][ii]-diff[ii]/2, alpha=0.05, color="gray", linestyle=':')
             if verbose:
                 ax[1].step(centers[eta_idx][label], residuals[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
                 ax[2].step(centers[eta_idx][label], variances[eta_idx][label], color=colors[idx], where = "mid", alpha=0.5)
-        ax[0].legend(fontsize=13, loc='lower right')
-        ax[0].set_ylim(0.3,1.7)
+        handles, labels = ax[0].get_legend_handles_labels()
+        ax[0].legend([handles[idx] for idx in legend_order],
+                     [labels[idx] for idx in legend_order],
+                     fontsize=20, loc='lower right')
+        #ax[0].legend()
+        ax[0].set_ylim(0.3,1.4)
         if verbose:
             ax[1].set_ylim(0, 2.9)
             ax[2].set_ylim(0, 90)
@@ -382,7 +401,7 @@ def plot_ptratio_distributions_n_width(df,
                                savefolder = "plots"):
     os.makedirs(savefolder, exist_ok=True)
     if eta_bins is None:
-        eta_bins = np.array([0, 0.7, 1.2, 1.5])
+        eta_bins = np.array([0, 0.7, 1.2, 1.479])
     if genpt_bins is None:
         genpt_bins = np.arange(1,105,3)
     centers = []
@@ -416,9 +435,6 @@ def plot_ptratio_distributions_n_width(df,
             if plots:
                 fig, ax = plt.subplots()
                 ax.axvline(1, color='black', alpha=0.3)
-                ax.set_title(f"$| \eta |$: [{eta_min},{eta_max}], GenPt: [{genpt_min},{genpt_max}]")
-                ax.set_xlabel("TkEle $p_{T}$ / Gen $p_{T}$")
-                ax.set_ylabel("Density")
             for idx, (label, ptratio) in enumerate(ptratio_dict.items()):
                 ptratio_eta = ptratio[mask]
                 mask_genpt = (genpt_eta >= genpt_min) & (genpt_eta < genpt_max)
@@ -437,12 +453,14 @@ def plot_ptratio_distributions_n_width(df,
 
                 n_bins = len(ptratio_masked)
                 if plots:
-                    h = hist.Hist(hist.axis.Regular(29, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / Gen $p_{T}$"))
+                    h = hist.Hist(hist.axis.Regular(29, 0.3, 1.7))
                     h.fill(ptratio_masked)
-                    hep.histplot(h, density=True, alpha=0.75, histtype='step', label=label, linewidth=2, color=colors[idx], ax=ax)
-                    ax.axvline(median, color=colors[idx], linestyle='--', label=f'Median {label}: {median:.2f}', alpha=0.7)
-                    ax.axvline(perc5, color=colors[idx], linestyle=':', label=f'5% {label}: {perc5:.2f}', alpha=0.7)
-                    ax.axvline(perc95, color=colors[idx], linestyle=':', label=f'95% {label}: {perc95:.2f}', alpha=0.7)
+                    hep.histplot(h, density=True, alpha=1, histtype='step', linewidth=3, color=colors[idx], ax=ax)
+                    ax.axvline(median, color=colors[idx], linestyle='--', label=f'Median: {median:.2f}', alpha=0.7)
+                    eff_sigma = smallest_interval_68(ptratio_masked)
+                    ax.fill_betweenx([0, 10], eff_sigma[0], eff_sigma[1], color=colors[idx], alpha=0.15, label=r'$\sigma_{\text{eff}}$',zorder=-999)
+                    #ax.axvline(perc5, color=colors[idx], linestyle=':', label=f'5% {label}: {perc5:.2f}', alpha=0.7)
+                    #ax.axvline(perc95, color=colors[idx], linestyle=':', label=f'95% {label}: {perc95:.2f}', alpha=0.7)
 
                 #![Last eta bin][label]
                 centers[-1][label] = np.append(centers[-1][label],((genpt_min + genpt_max) / 2))
@@ -457,7 +475,14 @@ def plot_ptratio_distributions_n_width(df,
                 n[-1][label] = np.append(n[-1][label],(n_bins))
 
             if plots:
-                ax.legend(fontsize=15)
+                ax.set_ylim(0, 10)
+                ax.set_xlim(0.2, 1.8)
+                ax.text(0.25, 8.5, f"${eta_min} < | \eta | < {eta_max} $\n${genpt_min} < p_T^{{\\text{{Gen}}}} < {genpt_max}$ GeV", fontsize=22)
+                ax.set_ylabel("Density")
+                ax.set_xlabel(r"$p_{T}^{\text{TkEle}}$ / $p_{T}^{\text{Gen}}$")
+                ax.legend(fontsize=22, loc='upper right')
+                hep.cms.text("Phase-2 Simulation Preliminary", ax=ax, loc=0, fontsize=22)
+                hep.cms.lumitext("PU 200 (14 TeV)", ax=ax, fontsize=22)
                 fig.savefig(f"{savefolder}/ptratio_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}_genpt_{str(genpt_min).replace('.','')}_{str(genpt_max).replace('.','')}.png")
                 fig.savefig(f"{savefolder}/ptratio_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}_genpt_{str(genpt_min).replace('.','')}_{str(genpt_max).replace('.','')}.pdf")
                 plt.close(fig)

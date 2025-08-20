@@ -127,7 +127,9 @@ xgbmodel=os.path.join(base_path, f"models/xgb_model_L1_q{quant}_out{q_out[0]}_{q
 conifermodel = xgbmodel.replace("xgb", "conifer")
 init_pred = 512 * 2**-9  # Initial prediction value for the BDT model
 
-
+xgbmodel_signalonly=os.path.join(base_path, "models/xgboost_model_L1.json")
+conifer_signalonly = xgbmodel_signalonly.replace("xgb", "conifer")
+init_pred_signalonly = 513 * 2**-9
 
 xilinx_cfg = {
     'Backend': 'xilinxhls',
