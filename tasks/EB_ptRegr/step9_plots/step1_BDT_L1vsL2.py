@@ -44,3 +44,4 @@ plot_results(df, ptratio_dict, genpt_, eta_, verbose=False, savefolder=savefolde
 ptratio_dict ={}
 ptratio_dict["No regression"] = "TkEle_Gen_ptRatio"
 plot_results(df, ptratio_dict, genpt_, eta_, verbose=True, savefolder=savefolder, eta_bins=np.array([0,1.479]))
+plot_results(df, ptratio_dict, genpt_, eta_, verbose=False, savefolder=savefolder, eta_bins=np.array([0,1.479]))
