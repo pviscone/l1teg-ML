@@ -62,7 +62,7 @@ teff = TEfficiency(
     lumitext="PU 200 (14 TeV)",
     cmstextsize=22,
     lumitextsize=22,
-    xlabel="Gen $p_{T}$ [GeV]",
+    xlabel="$p_{T}^{\\text{Gen}}$ [GeV]",
     rebin=5,
 )
 pt_h = hist.Hist(hist.axis.Regular(200, 3, 80))

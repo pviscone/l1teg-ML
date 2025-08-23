@@ -94,7 +94,7 @@ def plot_ptratio_distributions(df,
                 fig, ax = plt.subplots()
                 ax.axvline(1, color='black', alpha=0.3)
                 ax.set_title(f"$| \eta |$: [{eta_min},{eta_max}], GenPt: [{genpt_min},{genpt_max}]")
-                ax.set_xlabel("TkEle $p_{T}$ / Gen $p_{T}$")
+                ax.set_xlabel("TkEle $p_{T}$ / $p_{T}^{\\text{Gen}}$")
                 ax.set_ylabel("Density")
             for idx, (label, ptratio) in enumerate(ptratio_dict.items()):
                 ptratio_eta = ptratio[mask]
@@ -108,7 +108,7 @@ def plot_ptratio_distributions(df,
                 res = np.median(genpt_eta[mask_genpt]*np.abs(ptratio_masked - 1))
                 var = np.sum(((genpt_eta[mask_genpt]*np.abs(ptratio_masked - 1))**2)/(len(genpt_eta[mask_genpt]) - 1))
                 if plots:
-                    h = hist.Hist(hist.axis.Regular(29, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / Gen $p_{T}$"))
+                    h = hist.Hist(hist.axis.Regular(29, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / $p_{T}^{\\text{Gen}}$"))
                     h.fill(ptratio_masked)
                     hep.histplot(h, density=True, alpha=0.75, histtype='step', label=label, linewidth=2, color=colors[idx], ax=ax)
                     ax.axvline(median, color=colors[idx], linestyle='--', label=f'Median {label}: {median:.2f}', alpha=0.7)
@@ -175,7 +175,7 @@ def plot_ptratio_distributions_n(df,
                 fig, ax = plt.subplots()
                 ax.axvline(1, color='black', alpha=0.3)
                 ax.set_title(f"$| \eta |$: [{eta_min},{eta_max}], GenPt: [{genpt_min},{genpt_max}]")
-                ax.set_xlabel("TkEle $p_{T}$ / Gen $p_{T}$")
+                ax.set_xlabel("TkEle $p_{T}$ / $p_{T}^{\\text{Gen}}$")
                 ax.set_ylabel("Density")
             for idx, (label, ptratio) in enumerate(ptratio_dict.items()):
                 ptratio_eta = ptratio[mask]
@@ -190,7 +190,7 @@ def plot_ptratio_distributions_n(df,
                 var = np.sum(((genpt_eta[mask_genpt]*np.abs(ptratio_masked - 1))**2)/(len(genpt_eta[mask_genpt]) - 1))
                 n_bins = len(ptratio_masked)
                 if plots:
-                    h = hist.Hist(hist.axis.Regular(29, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / Gen $p_{T}$"))
+                    h = hist.Hist(hist.axis.Regular(29, 0.3, 1.7, name="ptratio", label="TkEle $p_{T}$ / $p_{T}^{\\text{Gen}}$"))
                     h.fill(ptratio_masked)
                     hep.histplot(h, density=True, alpha=0.75, histtype='step', label=label, linewidth=2, color=colors[idx], ax=ax)
                     ax.axvline(median, color=colors[idx], linestyle='--', label=f'Median {label}: {median:.2f}', alpha=0.7)
@@ -238,8 +238,8 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, per
             plt.setp(ax[1].get_xticklabels(), visible=False)
         ax[0].axhline(1, color='gray', linestyle='-', alpha=0.5, zorder=99)
         ax[0].text(0, 1.3, f"${eta_min}< | \eta | < {eta_max}$")
-        #ax[0].set_xlabel("Gen $p_{T}$ [GeV]")
-        ax[0].set_ylabel("$p_{T}^{\\text{TkEle}}$ / $p_{T}^{\\text{GenEle}}$")
+        #ax[0].set_xlabel("$p_{T}^{\\text{Gen}}$ [GeV]")
+        ax[0].set_ylabel("$p_{T}^{\\text{TkEle}}$ / $p_{T}^{\\text{Gen}}$")
         for idx, label in enumerate(ptratio_dict.keys()):
             diff = centers[eta_idx][label][1:]-centers[eta_idx][label][:-1]
             diff = np.append(diff, diff[-1])
@@ -268,11 +268,11 @@ def response_plot(ptratio_dict, eta_bins, centers, medians, perc5s, perc95s, per
         if verbose:
             ax[1].set_ylim(0, 2.9)
             ax[2].set_ylim(0, 90)
-            ax[1].set_ylabel("Med[|L1 $p_{T}$-Gen $p_{T}$|]", fontsize=10)
-            ax[2].set_xlabel("Gen $p_{T}$ [GeV]")
+            ax[1].set_ylabel("Med[|L1 $p_{T}$-$p_{T}^{\\text{Gen}}$|]", fontsize=10)
+            ax[2].set_xlabel("$p_{T}^{\\text{Gen}}$ [GeV]")
             ax[2].set_ylabel(r"$\sum \frac{\left( L1 p_{T}-Gen p_{T} \right)^2]}{N-1}$", fontsize=13)
         else:
-            ax[0].set_xlabel("Gen $p_{T}$ [GeV]")
+            ax[0].set_xlabel("$p_{T}^{\\text{Gen}}$ [GeV]")
         hep.cms.text("Phase-2 Simulation Preliminary", ax=ax[0], loc=0, fontsize=22)
         hep.cms.lumitext("PU 200 (14 TeV)", ax=ax[0], fontsize=22)
         fig.savefig(f"{savefolder}/aresponse_eta_{str(eta_min).replace('.','')}_{str(eta_max).replace('.','')}.pdf")
@@ -497,8 +497,8 @@ def resolution_plot(ptratio_dict, eta_bins, centers, width, variances=None, n=No
         fig, ax = plt.subplots()
         ax.axhline(0, color='black', linestyle=':', alpha=0.3)
         ax.text(0, 0.28, f"${eta_min} < | \eta | < {eta_max}$")
-        ax.set_xlabel("Gen $p_{T}$ [GeV]")
-        ax.set_ylabel("$\sigma_{eff}$($p_{T}^{\\text{TkEle}}$ / $p_{T}^{\\text{GenEle}}$)")
+        ax.set_xlabel("$p_{T}^{\\text{Gen}}$ [GeV]")
+        ax.set_ylabel("$\sigma_{eff}$($p_{T}^{\\text{TkEle}}$ / $p_{T}^{\\text{Gen}}$)")
         for idx, label in enumerate(ptratio_dict.keys()):
             #width = (perc84s[eta_idx][label] - perc16s[eta_idx][label])# / centers[eta_idx][label]
             diff=(centers[eta_idx][label][1:]-centers[eta_idx][label][:-1])/2
