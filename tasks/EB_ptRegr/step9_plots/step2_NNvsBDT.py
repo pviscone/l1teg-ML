@@ -22,8 +22,9 @@ df = open_signal(signal_test)
 
 #%%
 ptratio_dict = {"NoRegression": "TkEle_Gen_ptRatio",
+                "BDT": "BDT",
                 "NN": "NN",
-                "BDT": "BDT"}
+                }
 
 bdt = xgb.XGBRegressor()
 bdt.load_model("../models/xgboost_model_L1.json")
